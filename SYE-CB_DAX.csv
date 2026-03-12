@@ -1,0 +1,93 @@
+Table,Measure,DAX Expression
+"CB-SYE 25-26 Data","Current Program Year","2026"
+"CB-SYE 25-26 Data","Avg Student Satisfaction Score","AVERAGE('CB-SYE 25-26 Data'[Satifaction Survey - Student ])"
+"CB-SYE 25-26 Data","Satisfaction Goal","4.5"
+"CB-SYE 25-26 Data","Pct of Goal","DIVIDE([Avg Student Satisfaction Score], [Satisfaction Goal], 0)"
+"CB-SYE 25-26 Data","Min Val","1"
+"CB-SYE 25-26 Data","Max Val","5"
+"CB-SYE 25-26 Data","Avg Business Satisfaction Score","AVERAGE('CB-SYE 25-26 Data'[Satifaction Survey - Student - Host Business ])"
+"2026 Job Placements 12-22","Placement Rate","DIVIDE(
+    COUNTROWS(
+        FILTER(
+            'CB-SYE 25-26 Data',
+            'CB-SYE 25-26 Data'[Internship Site] <> BLANK()
+        )
+    ),
+    COUNTROWS('CB-SYE 25-26 Data'),
+    0
+) * 100"
+"2026 Job Placements 12-22","Students Recruited","COUNTROWS('CB-SYE 25-26 Data')"
+"2026 Job Placements 12-22","Interns Target Display","VAR ActualValue = [Interns Placed]
+VAR TargetValue = 355
+VAR _Variance = ActualValue - TargetValue
+VAR VariancePercent = DIVIDE(_Variance, TargetValue, 0)
+VAR PercentText = FORMAT(VariancePercent, ""0.0%"")
+VAR Result = 
+    FORMAT(TargetValue, ""#,##0"") & 
+    "" ("" & 
+    IF(VariancePercent >= 0, ""+"", """") & 
+    PercentText & 
+    "")""
+RETURN
+    Result"
+"2026 Job Placements 12-22","Interns Placed","VAR Result = CALCULATE(
+    COUNTROWS('CB-SYE 25-26 Data'),
+    'CB-SYE 25-26 Data'[Status] = ""Placed""
+)
+RETURN
+IF(ISBLANK(Result), 0, Result)"
+"2026 Job Placements 12-22","Target Color Interns Placements","VAR ActualValue = [Interns Placed]
+VAR TargetValue = 355
+VAR PercentOfTarget = DIVIDE(ActualValue, TargetValue, 0)
+RETURN
+    SWITCH(
+        TRUE(),
+        PercentOfTarget >= 0.9 && PercentOfTarget <= 1, ""Green"",   // 90–100%
+        PercentOfTarget >= 0.75 && PercentOfTarget < 0.9, ""Yellow"",// 75–89.99%
+        ""Red""                                                      // Below 75%
+    )"
+"2026 Job Placements 12-22","New Businesses Count","CALCULATE(
+    COUNTROWS('2026 Job Placements 12-22'),
+    '2026 Job Placements 12-22'[New or Returning ] = ""New""
+)"
+"2026 Job Placements 12-22","New Business Target Display","VAR ActualValue = [New Businesses Count]
+VAR TargetValue = 10
+VAR _Variance = ActualValue - TargetValue
+VAR VariancePercent = DIVIDE(_Variance, TargetValue, 0)
+VAR PercentText = FORMAT(VariancePercent, ""0.0%"")
+VAR Result = 
+    FORMAT(TargetValue, ""#,##0"") & 
+    "" ("" & 
+    IF(VariancePercent >= 0, ""+"", """") & 
+    PercentText & 
+    "")""
+RETURN
+    Result"
+"2026 Job Placements 12-22","Job Placements Secured","CALCULATE(
+    COUNTROWS('2026 Job Placements 12-22')
+)"
+"2026 Job Placements 12-22","Job Placements Target Display","VAR ActualValue = [Job Placements Secured]
+VAR TargetValue = 355
+VAR _Variance = ActualValue - TargetValue
+VAR VariancePercent = DIVIDE(_Variance, TargetValue, 0)
+VAR PercentText = FORMAT(VariancePercent, ""0.0%"")
+VAR Result = 
+    FORMAT(TargetValue, ""#,##0"") & 
+    "" ("" & 
+    IF(VariancePercent >= 0, ""+"", """") & 
+    PercentText & 
+    "")""
+RETURN
+    Result"
+"2026 Job Placements 12-22","Target Color Businesses","VAR ActualValue = [New Businesses Count]
+VAR TargetValue = 10
+VAR PercentOfTarget = DIVIDE(ActualValue, TargetValue, 0)
+RETURN
+    SWITCH(
+        TRUE(),
+        PercentOfTarget >= 0.9 && PercentOfTarget <= 1, ""Green"",   // 90–100%
+        PercentOfTarget >= 0.75 && PercentOfTarget < 0.9, ""Yellow"",// 75–89.99%
+        ""Red""                                                      // Below 75%
+    )"
+"CB_Speakers","Unique Speakers","DISTINCTCOUNT(CB_Speakers[Speaker Name])"
+"File_Metadata","Source Data Last Updated","""Excel File Last Updated: "" & FORMAT(MAX('File_Metadata'[Last Updated]), ""MMM dd, yyyy h:mm AM/PM"")"

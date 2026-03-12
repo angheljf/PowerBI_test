@@ -1,0 +1,237 @@
+Table,Measure,DAX Expression
+"FY 25-26 CURRENT DATA","Total Active Students","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[Student Current Status] = ""ACTIVE""
+)"
+"FY 25-26 CURRENT DATA","Students Ready for Placement","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[Student Current Status] = ""ACTIVE"",
+    'FY 25-26 CURRENT DATA'[Ready for Placement] = ""READY""
+)"
+"FY 25-26 CURRENT DATA","Program Completion Rate","VAR ReadyStudents = [Students Ready for Placement]
+VAR ActiveStudents = [Total Active Students]
+RETURN
+IF(
+    ISBLANK(ReadyStudents) || ISBLANK(ActiveStudents),
+    0,
+    DIVIDE(ReadyStudents, ActiveStudents, 0) * 100
+)"
+"FY 25-26 CURRENT DATA","Students Placed","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[PlacementY/N?] = ""YES""
+)"
+"FY 25-26 CURRENT DATA","Students Eligible for Placement","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[Student Current Status] = ""ACTIVE"",
+    'FY 25-26 CURRENT DATA'[Ready for Placement] = ""READY""
+)"
+"FY 25-26 CURRENT DATA","Current Placement Rate","VAR Result = DIVIDE(
+    [Students Placed],
+    [Students Eligible for Placement],
+    0
+) * 100
+RETURN
+IF(ISBLANK(Result), 0, Result)"
+"FY 25-26 CURRENT DATA","Placement Rate Card","VAR _Rate = [Current Placement Rate]
+VAR _Placed = [Students Placed]
+VAR _Eligible = [Students Eligible for Placement]
+VAR _Benchmark = 80
+VAR _Gap = _Rate - _Benchmark
+VAR _Icon = 
+    SWITCH(
+        TRUE(),
+        _Rate >= _Benchmark, ""🟢"",
+        _Rate >= 70, ""🟡"",
+        ""🔴""
+    )
+VAR _GapText = 
+    IF(
+        _Gap >= 0,
+        "" (+"" & FORMAT(_Gap, ""0.0"") & ""% vs goal)"",
+        "" ("" & FORMAT(_Gap, ""0.0"") & ""% vs goal)""
+    )
+RETURN
+    IF(
+        _Eligible = 0,
+        ""No Students Ready"",
+        _Icon & "" "" & FORMAT(_Rate, ""0.0"") & ""%"" & UNICHAR(10) &
+        _Placed & "" of "" & _Eligible & "" placed"" & UNICHAR(10) &
+        ""Goal: "" & _Benchmark & ""%"" & _GapText
+    )"
+"FY 25-26 CURRENT DATA","Onboarded","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[Student Current Status] = ""ACTIVE"",
+    'FY 25-26 CURRENT DATA'[Onboard Complete(i.e. All Platforms, All State Docs)] = ""COMPLETE""
+)"
+"FY 25-26 CURRENT DATA","Soft Skills Complete","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[Student Current Status] = ""ACTIVE"",
+    'FY 25-26 CURRENT DATA'[Soft Skills Curriculum Completed] = ""COMPLETE""
+)"
+"FY 25-26 CURRENT DATA","ABCI Workshops","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[Student Current Status] = ""ACTIVE"",
+    'FY 25-26 CURRENT DATA'[ABCI Workshops Completed] = ""COMPLETE""
+)"
+"FY 25-26 CURRENT DATA","Industry Certs","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[Student Current Status] = ""ACTIVE"",
+    'FY 25-26 CURRENT DATA'[Industry Certifications (3)(i.e. OSHA, CPR, Forklift, etc.)] = ""COMPLETE""
+)"
+"FY 25-26 CURRENT DATA","Rdy for Placement","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[Student Current Status] = ""ACTIVE"",
+    'FY 25-26 CURRENT DATA'[Ready for Placement] = ""READY""
+)"
+"FY 25-26 CURRENT DATA","Funnel Count","VAR CurrentStage = SELECTEDVALUE('Stages'[Stage]) 
+RETURN 
+SWITCH( 
+    CurrentStage, 
+    ""Enrolled"", [Total Active Students], 
+    ""Onboarded"", [Onboarded], 
+    ""Soft Skills Complete"", [Soft Skills Complete], 
+    ""ABCI Workshops"", [ABCI Workshops], 
+    ""Industry Certs"", [Industry Certs], 
+    ""Ready for Placement"", [Rdy for Placement], 
+    ""Placed"", [Placed], 
+  BLANK() 
+)"
+"FY 25-26 CURRENT DATA","Students Onboarded","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[Onboard Complete(i.e. All Platforms, All State Docs)] = ""COMPLETE""
+)"
+"FY 25-26 CURRENT DATA","Onboarding Completion Rate","DIVIDE(
+    [Students Onboarded],
+    [Total Active Students],
+    0
+) * 100"
+"FY 25-26 CURRENT DATA","Onboarding Status Display","VAR _Rate = [Onboarding Completion Rate]
+VAR _Onboarded = [Students Onboarded]
+VAR _Total = [Total Active Students]
+VAR _Icon = 
+    SWITCH(
+        TRUE(),
+        _Rate >= 90, ""🟢"",
+        _Rate >= 75, ""🟡"",
+        _Rate > 0, ""🔴"",
+        ""⚪""
+    )
+RETURN
+    IF(
+        _Total = 0,
+        ""No active students"",
+        _Icon & "" "" & FORMAT(_Rate, ""0.0"") & ""%"" & UNICHAR(10) &
+        _Onboarded & "" of "" & _Total
+    )"
+"FY 25-26 CURRENT DATA","Students with Badges","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[Badge Credentials Completed] >= 1,
+    'FY 25-26 CURRENT DATA'[Student Current Status] = ""ACTIVE""
+)"
+"FY 25-26 CURRENT DATA","Students All Curriculum Complete","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[Soft Skills Curriculum Completed] = ""COMPLETE"",
+    'FY 25-26 CURRENT DATA'[Badge Credentials Completed] >= 1,
+    'FY 25-26 CURRENT DATA'[ABCI Workshops Completed] = ""COMPLETE"",
+    'FY 25-26 CURRENT DATA'[Student Current Status] = ""ACTIVE""
+)"
+"FY 25-26 CURRENT DATA","Curriculum Completion Rate (All)","DIVIDE(
+    [Students All Curriculum Complete],
+    [Total Active Students],
+    0
+) * 100"
+"FY 25-26 CURRENT DATA","Curriculum Completion Display","VAR _Rate = [Curriculum Completion Rate (All)]
+VAR _Complete = [Students All Curriculum Complete]
+VAR _Total = [Total Active Students]
+VAR _Icon = 
+    SWITCH(
+        TRUE(),
+        _Rate >= 80, ""🟢"",
+        _Rate >= 65, ""🟡"",
+        _Rate > 0, ""🔴"",
+        ""⚪""
+    )
+RETURN
+    IF(
+        _Total = 0,
+        ""No active students"",
+        _Icon & "" "" & FORMAT(_Rate, ""0.0"") & ""%"" & UNICHAR(10) &
+        _Complete & "" of "" & _Total
+    )"
+"FY 25-26 CURRENT DATA","Industry Cert Rate","DIVIDE(
+    [Total Active Students],
+    [Industry Certs],
+    0
+) * 100"
+"FY 25-26 CURRENT DATA","Cert Completion Display","VAR _Rate = [Industry Cert Rate]
+VAR _Complete = [Industry Certs]
+VAR _Total = [Total Active Students]
+VAR _Icon = 
+    SWITCH(
+        TRUE(),
+        _Rate >= 80, ""🟢"",
+        _Rate >= 65, ""🟡"",
+        _Rate > 0, ""🔴"",
+        ""⚪""
+    )
+RETURN
+    IF(
+        _Total = 0,
+        ""No active students"",
+        _Icon & "" "" & FORMAT(_Rate, ""0.0"") & ""%"" & UNICHAR(10) &
+        _Complete & "" of "" & _Total
+    )"
+"FY 25-26 CURRENT DATA","Students 30-Day Compliant","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[30-Day ComplianceY/N?] = ""Yes""
+)"
+"FY 25-26 CURRENT DATA","Avg Knowledge Gained","VAR Result = AVERAGE('FY 25-26 CURRENT DATA'[Knowledge Gained %])
+RETURN
+IF(ISBLANK(Result), 0, Result)"
+"FY 25-26 CURRENT DATA","Employment Retention Rate","DIVIDE(
+    COUNTROWS(
+        FILTER(
+            'FY 25-26 CURRENT DATA',
+            'FY 25-26 CURRENT DATA'[Student Current Status] = ""ACTIVE""
+        )
+    ),
+    280
+)"
+"Stages","Placed","CALCULATE(
+    COUNTROWS('FY 25-26 CURRENT DATA'),
+    'FY 25-26 CURRENT DATA'[Student Current Status] = ""ACTIVE"",
+    'FY 25-26 CURRENT DATA'[PlacementY/N?] = ""YES""
+)"
+"Budget_Tracker_Normalized","Budget Utilization %","DIVIDE(
+    SUM(Budget_Tracker_Normalized[YTD_Actuals]) / 12, 
+    SUM(Budget_Tracker_Normalized[Budget_Total]) / 12, 
+    0
+) * 100"
+"Budget_Tracker_Normalized","Variance %","DIVIDE(
+    SUM(Budget_Tracker_Normalized[Variance]), 
+    SUM(Budget_Tracker_Normalized[Monthly_Budget]), 
+    0
+) * 100"
+"Budget_Tracker_Normalized","Total Expenses YTD","CALCULATE(
+    SUM(Budget_Tracker_Normalized[YTD_Actuals]) / 12, 
+    Budget_Tracker_Normalized[Category] = ""EXPENSE""
+)"
+"Budget_Tracker_Normalized","Total Revenue YTD","CALCULATE(
+    SUM(Budget_Tracker_Normalized[YTD_Actuals]) / 12, 
+    Budget_Tracker_Normalized[Category] = ""REVENUE""
+)"
+"Budget_Tracker_Normalized","Net Income YTD","[Total Revenue YTD] - [Total Expenses YTD]"
+"Budget_Tracker_Normalized","Total Budget","SUM(Budget_Tracker_Normalized[Budget_Total]) / 12"
+"Budget_Tracker_Normalized","Budget Remaining Total","[Total Budget] - ([Total Expenses YTD] + [Total Revenue YTD])"
+"Budget_Tracker_Normalized","Accounts Over Budget Count","CALCULATE(
+    DISTINCTCOUNT(Budget_Tracker_Normalized[Account_Number]),
+    Budget_Tracker_Normalized[YTD_Actuals] > Budget_Tracker_Normalized[Budget_Total]
+)"
+"Budget_Tracker_Normalized","Total Funding Budget","SUM(Budget_Tracker_Normalized[Total_Funding_Budget]) / 12"
+"Budget_Tracker_Normalized","Overall Budget Variance","SUM(Budget_Tracker_Normalized[Budget_Variance]) / 12"
+"Budget_Tracker_Normalized","Budget Variance %","DIVIDE(
+    SUM(Budget_Tracker_Normalized[Budget_Variance]) / 12, 
+    SUM(Budget_Tracker_Normalized[Budget_Total]) / 12, 
+    0
+) * 100"
+"File_Metadata","Source Data Last Updated","""Excel File Last Updated: "" & FORMAT(MAX('File_Metadata'[Last Updated]), ""MMM dd, yyyy h:mm AM/PM"")"

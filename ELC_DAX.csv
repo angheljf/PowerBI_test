@@ -1,0 +1,111 @@
+Table,Measure,DAX Expression
+CDP School Info,CDP_TotalStudentsRecruited,"COALESCE(CALCULATE(sum('CDP School Info'[# of Students Pending]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear])),0)"
+CDP School Info,CDP_OtherStudentsRecruited,"COALESCE(CALCULATE(sum('CDP School Info'[# of Students Pending]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'CDP School Info'[School Type] <> ""BCPS""),0)"
+CDP School Info,CDP_TotalStudentsVerified,"COALESCE(CALCULATE(sum('CDP School Info'[Verified Students]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear])),0)"
+CDP School Info,CDP_OtherStudentsVerified,"COALESCE(CALCULATE(sum('CDP School Info'[Verified Students]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'CDP School Info'[School Type] <> ""BCPS""),0)"
+CDP School Info,CDP_TotalSchools,"COALESCE(CALCULATE(COUNT('CDP School Info'[BCRM LOOKUPID]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear])),0)"
+CDP School Info,CDP_OtherSchools,"COALESCE(CALCULATE(COUNT('CDP School Info'[BCRM LOOKUPID]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'CDP School Info'[School Type] <> ""BCPS""),0)"
+CDP School Info,CDP_BCPSStudentsRecruited,"COALESCE(CALCULATE(sum('CDP School Info'[# of Students Pending]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'CDP School Info'[School Type] = ""BCPS""),0)"
+CDP School Info,CDP_BCPSSchools,"COALESCE(CALCULATE(COUNT('CDP School Info'[BCRM LOOKUPID]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'CDP School Info'[School Type] = ""BCPS""),0)"
+CDP School Info,CDP_WPBrecruitedStudents,"COALESCE(CALCULATE(SUM('CDP School Info'[# of Students Pending]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'CDP School Info'[Program] = ""WPB CF""),0)"
+CDP School Info,CDP_WPBSchoolsVerified,"COALESCE(CALCULATE(DISTINCTCOUNT('CDP School Info'[BCRM LOOKUPID]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'CDP School Info'[Program] =""WPB CF"" && 'CDP School Info'[Verified Students] <> BLANK() && 'CDP School Info'[SchoolTypeCategory] =""Non-BCPS"" ),0)"
+CDP School Info,NumberOfSchools_Accommodations,"CALCULATE(COUNT('CDP School Info'[BCRM LOOKUPID]), 'CDP School Info'[TotalStudentAccommodations] <> BLANK())"
+CDP School Info,CDP_countSchoolsCompleted,"VAR _startDate = CALCULATE(min('Date'[Date]), 'Date'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]))
+VAR _endDate = EOMONTH(CALCULATE(MAX('Date'[Date]), 'Date'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear])), -2)
+Var _schoolscompleted = CALCULATE(count('CDP School Info'[BCRM LOOKUPID]), 'CDP School Info'[Verified Students]<> BLANK())
+return
+_schoolscompleted"
+CDP School Info,CDP_ALLVerifiedStudents,"COALESCE(CALCULATE(SUM('CDP School Info'[Verified Students]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'CDP School Info'[Program] = ""CDP""),0)"
+CDP School Info,CDP_BCPSVerifiedStudents,"COALESCE(CALCULATE(SUM('CDP School Info'[Verified Students]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'CDP School Info'[Program] = ""CDP"" && 'CDP School Info'[SchoolTypeCategory] = ""BCPS""),0)"
+CDP School Info,CDP_ALLVerifiedSchools,"COALESCE(CALCULATE(distinctcount('CDP School Info'[BCRM LOOKUPID]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear])  && 'CDP School Info'[Verified Students]<> BLANK()),0)"
+CDP School Info,CDP_BCPSSchoolsVerified,"COALESCE(CALCULATE(DISTINCTCOUNT('CDP School Info'[BCRM LOOKUPID]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'CDP School Info'[SchoolTypeCategory] = ""BCPS"" && 'CDP School Info'[Verified Students]<> BLANK() && 'CDP School Info'[Program] = ""CDP""),0)"
+CDP School Info,CDP_Non-BCPSVerifiedStudents,"COALESCE(CALCULATE(SUM('CDP School Info'[Verified Students]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'CDP School Info'[Program] = ""CDP"" && 'CDP School Info'[SchoolTypeCategory] = ""Non-BCPS"" ),0)"
+CDP School Info,CDP_Non-BCPSSchoolsVerified,"COALESCE(CALCULATE(DISTINCTCOUNT('CDP School Info'[BCRM LOOKUPID]), 'CDP School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'CDP School Info'[SchoolTypeCategory] = ""Non-BCPS"" && 'CDP School Info'[Verified Students]<> BLANK() && 'CDP School Info'[Program] = ""CDP""),0)"
+CDP School Info,CDP_Projected_Students_Fee_Table,"CALCULATE(
+        SUM('CDP School Info'[# of Students Pending])
+    )"
+CDP School Info,Total CDP Program Fee,"VAR TotalValue = 
+    SUMX(
+        'CDP School Info', 
+        [CDP_OtherStudentsRecruited] * 'CDP School Info'[Fee Per Student]
+    )
+RETURN
+    COALESCE(TotalValue, 0)"
+CDP School Info,CDP Row Highlight Color,"IF(
+    SUM('CDP School Info'[Fee Per Student]) = 0, 
+    ""#FF0000"",  // This is the Hex code for Red. Change to any color you like.
+    BLANK()     // Returns no color if the value is not 0
+)"
+Date,%SchoolYearCompleted,"VAR _startDate = CALCULATE(min('Date'[Date]), 'Date'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]))
+VAR _endDate = EOMONTH(CALCULATE(MAX('Date'[Date]), 'Date'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear])), -3) +5
+VAR _NumSchoolDays = CALCULATE(COUNT('Date'[Date]), DATESBETWEEN('Date'[Date], _startDate,_endDate))
+VAR _datesElapsed = CALCULATE(COUNT('Date'[Date]), DATESBETWEEN('Date'[Date], _startDate,today()))
+VAR _Completed = COALESCE(DIVIDE(_datesElapsed, _NumSchoolDays ),0)
+return
+If( _Completed >= 1, 1, _Completed)"
+Recruitment,Current Max Recruitment,BLANK()
+Recruitment,RecruitmentSelected SY,"COALESCE(CALCULATE(sum(Recruitment[Final Recruitment]), Recruitment[School Year] = SELECTEDVALUE('Date'[SchoolYear])),0)"
+Recruitment,Recruitment Variance,sum(Recruitment[Final Recruitment]) - SUM(Recruitment[Minimum Recruitment])
+BT-School Info,BT_TotalStudentsRecruited,"COALESCE(CALCULATE(SUM('BT-School Info'[Projected Student Count]), 'BT-School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear])),0)"
+BT-School Info,BT_OtherStudentsRecruited,"COALESCE(CALCULATE(sum('BT-School Info'[Projected Student Count]), 'BT-School Info'[SchoolTypeCategory] <> ""BCPS""  && 'BT-School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear])),0)"
+BT-School Info,BT_TotalSchools,"COALESCE(CALCULATE(count('BT-School Info'[BCRM LookupId]), 'BT-School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear])),0)"
+BT-School Info,BT_OtherSchoolsCount,"COALESCE(CALCULATE(COUNT('BT-School Info'[BCRM LookupId]), 'BT-School Info'[SchoolTypeCategory] <> ""BCPS""  && 'BT-School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear])),0)"
+BT-School Info,BT_BCPSStudentsRecruited,"COALESCE(CALCULATE(SUM('BT-School Info'[Projected Student Count]), 'BT-School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'BT-School Info'[SchoolTypeCategory] = ""BCPS""),0)"
+BT-School Info,BT_BCPSSchoolsRecruitedCount,"COALESCE(CALCULATE(COUNT('BT-School Info'[BCRM LookupId]), 'BT-School Info'[SchoolTypeCategory] = ""BCPS""  && 'BT-School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear])),0)"
+BT-School Info,countSchoolsCompleted,"VAR _startDate = CALCULATE(min('Date'[Date]), 'Date'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]))
+VAR _endDate = EOMONTH(CALCULATE(MAX('Date'[Date]), 'Date'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear])), -2)
+Var _schoolscompleted = CALCULATE(count('BT-School Info'[BCRM LookupId]),'BT-School Info'[Verified Student Count] <> BLANK())
+return
+_schoolscompleted"
+BT-School Info,BT_BCPSStudentsVerified,"COALESCE(CALCULATE(SUM('BT-School Info'[Verified Student Count]), 'BT-School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'BT-School Info'[SchoolTypeCategory] = ""BCPS""),0)"
+BT-School Info,BT_Non-BCPSStudentsVerified,"COALESCE(CALCULATE(SUM('BT-School Info'[Verified Student Count]), 'BT-School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'BT-School Info'[SchoolTypeCategory] = ""Non-BCPS""),0)"
+BT-School Info,BT_ALLStudentsVerified,[BT_BCPSStudentsVerified] + [BT_Non-BCPSStudentsVerified]
+BT-School Info,BT_BCPSSchoolsVerifiedCount,"COALESCE(CALCULATE(COUNT('BT-School Info'[BCRM LookupId]), 'BT-School Info'[SchoolTypeCategory] = ""BCPS""  && 'BT-School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'BT-School Info'[Verified Student Count]<> BLANK()),0)"
+BT-School Info,BT_Non-BCPSSchoolsVerifiedCount,"COALESCE(CALCULATE(COUNT('BT-School Info'[BCRM LookupId]), 'BT-School Info'[SchoolTypeCategory] = ""Non-BCPS""  && 'BT-School Info'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]) && 'BT-School Info'[Verified Student Count]<> BLANK()),0)"
+BT-School Info,BT_Projected_Students_For_Table,"CALCULATE(
+    SUM('BT-School Info'[Projected Student Count])
+)"
+BT-School Info,BT Row Highlight Color,"IF(
+    SUM('BT-School Info'[BT Program Fee]) = 0, 
+    ""#FFE8E8"",  // This is the Hex code for Red. Change to any color you like.
+    BLANK()     // Returns no color if the value is not 0
+)"
+BT_Accommodations,BT_SchoolsAccommodated,"CALCULATE(count(BT_Accommodations[BCRM LookupId]), BT_Accommodations[Total Students Supported] <> BLANK())"
+KPIs1,BT_RecruitedBCPSSchoolsCurrentFY,"CALCULATE(sum('KPIs1'[Target Value]), 'KPIs1'[Target Metric] = ""BCPS Schools Recruited"" && 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear]) && KPIs1[Program] = ""BT"")"
+KPIs1,BT-OTHERRecruitedStudentsCurrentFY,"CALCULATE(MAX('KPIs1'[Target Value]), 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear]) && 'KPIs1'[Target Metric] = ""OTHER Students Recruited"" && KPIs1[Program] = ""BT"")"
+KPIs1,BT_RecruitedALLStudents,[BTRecruitedBCPSStudentsCurrentFY] + [BT-OTHERRecruitedStudentsCurrentFY]
+KPIs1,BTRecruitedBCPSStudentsCurrentFY,"CALCULATE(sum('KPIs1'[Target Value]), 'KPIs1'[Target Metric] = ""BCPS Students Recruited"" && 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear])&& KPIs1[Program] = ""BT"")"
+KPIs1,BTRecruitedNon-BCPSSchoolsCurrentFY,"CALCULATE(sum('KPIs1'[Target Value]), 'KPIs1'[Target Metric] = ""OtherSchools Recruited"" && 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear]) && KPIs1[Program] = ""BT"")"
+KPIs1,BT_ALLRecruitedSchools,[BT_RecruitedBCPSSchoolsCurrentFY] + [BTRecruitedNon-BCPSSchoolsCurrentFY]
+KPIs1,CDP_ALLRecruitedStudentsCurrentFY,[CDPOTHERRecruitedStudentsCurrentFY] + [CDPRecruitedBCPSStudentsCurrentFY]
+KPIs1,CDP_BCPSRecruitedStudentsCurrentFY,"CALCULATE(MAX('KPIs1'[Target Value]), 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear]) && 'KPIs1'[Target Metric] = ""BCPS Students Recruited"" && KPIs1[Program] = ""CDP"")"
+KPIs1,CDP_WPBVerifiedSchoolsCurrentFY,"CALCULATE(MAX('KPIs1'[Target Value]), 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear]) && 'KPIs1'[Target Metric] = ""WPB Schools Completed"" && KPIs1[Program] = ""CDP"")"
+KPIs1,CDPOTHERRecruitedStudentsCurrentFY,"CALCULATE(MAX('KPIs1'[Target Value]), 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear]) && 'KPIs1'[Target Metric] = ""OTHER Students Recruited"" && KPIs1[Program] = ""CDP"")"
+KPIs1,CDPRecruitedALLSchoolsCurrentFY,[CDPRecruitedOTHERSchoolsCurrentFY] + [CDPRecruitedBCPSSchoolsCurrentFY]
+KPIs1,CDPRecruitedBCPSSchoolsCurrentFY,"CALCULATE(sum('KPIs1'[Target Value]), 'KPIs1'[Target Metric] = ""BCPS Schools Recruited"" && 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear]) && KPIs1[Program] = ""CDP"")"
+KPIs1,CDPRecruitedBCPSStudentsCurrentFY,"CALCULATE(sum('KPIs1'[Target Value]), 'KPIs1'[Target Metric] = ""BCPS Students Recruited"" && 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear]) && KPIs1[Program] = ""CDP"")"
+KPIs1,CDPRecruitedOTHERSchoolsCurrentFY,"CALCULATE(sum('KPIs1'[Target Value]), 'KPIs1'[Target Metric] = ""OTHER Schools Recruited"" && 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear]) && KPIs1[Program] = ""CDP"")"
+KPIs1,CDPVerifiedOTHERSchoolsCurrentFY,"CALCULATE(sum('KPIs1'[Target Value]), 'KPIs1'[Target Metric] = ""OTHER Schools Completed"" && 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear]) && KPIs1[Program] = ""CDP"")"
+KPIs1,CDP_BCPSVerifiedStudentsCurrentFY,"CALCULATE(MAX('KPIs1'[Target Value]), 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear]) && 'KPIs1'[Target Metric] = ""BCPS Students Completed"" && KPIs1[Program] = ""CDP"")"
+KPIs1,CDP_NON-BCPSVerifiedStudentsCurrentFY,"CALCULATE(MAX('KPIs1'[Target Value]), 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear]) && 'KPIs1'[Target Metric] = ""OTHER Students Completed"" && KPIs1[Program] = ""CDP"")"
+KPIs1,CDPVerifiedBCPSSchoolsCurrentFY,"CALCULATE(sum('KPIs1'[Target Value]), 'KPIs1'[Target Metric] = ""BCPS Schools Completed"" && 'KPIs1'[Fiscal Year]= SELECTEDVALUE('Date'[SchoolYear]) && KPIs1[Program] = ""CDP"")"
+KPIs1,CDP_AllVerifiedSchoolsKPI,[CDPVerifiedBCPSSchoolsCurrentFY] + [CDPVerifiedOTHERSchoolsCurrentFY] + [CDP_WPBVerifiedSchoolsCurrentFY]
+KPIs1,BTStudentPostTest,"CALCULATE(sum(KPIs1[Target Value]), KPIs1[Target Metric] = ""Student Post Test Completion"" && KPIs1[Fiscal Year] = SELECTEDVALUE('Date'[SchoolYear]))"
+KPIs1,BTTeacherSurvey,"CALCULATE(sum(KPIs1[Target Value]), KPIs1[Target Metric] = ""Teacher Survey out of 5"" && KPIs1[Fiscal Year] = SELECTEDVALUE('Date'[SchoolYear]))"
+KPIs1,CDPAllVerifiedStudent,[CDP_NON-BCPSVerifiedStudentsCurrentFY] + [CDP_BCPSVerifiedStudentsCurrentFY]
+KPIs1,BT_BCPSCompletedSchoolsKPICurrentFY,"CALCULATE(sum(KPIs1[Target Value]), KPIs1[Target Metric] = ""BCPS Schools Completed"" && KPIs1[Fiscal Year] = SELECTEDVALUE('Date'[SchoolYear]) && KPIs1[Program] = ""BT"")"
+KPIs1,BT_BCPSCompletedStudentsKPICurrentFY,"CALCULATE(sum(KPIs1[Target Value]), KPIs1[Target Metric] = ""BCPS Students Completed"" && KPIs1[Fiscal Year] = SELECTEDVALUE('Date'[SchoolYear]) && KPIs1[Program] = ""BT"")"
+KPIs1,BT_Non-BCPSCompletedStudentsKPICurrentFY,"CALCULATE(sum(KPIs1[Target Value]), KPIs1[Target Metric] = ""OTHER Students Completed"" && KPIs1[Fiscal Year] = SELECTEDVALUE('Date'[SchoolYear])&& KPIs1[Program] = ""BT"")"
+KPIs1,BT_AllStudentsCompletedKPI,[BT_BCPSCompletedStudentsKPICurrentFY] + [BT_Non-BCPSCompletedStudentsKPICurrentFY]
+KPIs1,BT_Non-BCPSCompletedSchoolsKPICurrentFY,"CALCULATE(sum(KPIs1[Target Value]), KPIs1[Target Metric] = ""OTHER Schools Completed"" && KPIs1[Fiscal Year] = SELECTEDVALUE('Date'[SchoolYear]) && KPIs1[Program] = ""BT"")"
+KPIs1,BT_AllSchoolsCompletedKPI,[BT_BCPSCompletedSchoolsKPICurrentFY] + [BT_Non-BCPSCompletedSchoolsKPICurrentFY]
+CDP Survey Stars,AverageSurveyScore,AVERAGE('CDP Survey Stars'[Student Survey (4/5 stars)])
+CDP Survey Stars,AverageSurveyTechScore,AVERAGE('CDP Survey Stars'[Student Survey Technology (4/5 Stars)])
+BT Post Test,CompletionRatePercentage,"VAR _totalStudents = CALCULATE(sum(BT_Accommodations[TotalStudentsAttended]), BT_Accommodations[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]))
+Var _PostTestCompleted = CALCULATE(COUNT('BT Post Test'[Id]), 'BT Post Test'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]))
+Return
+DIVIDE(_PostTestCompleted, _totalStudents)"
+BT Post Test,BT_RateYourDayScore,"CALCULATE(AVERAGE('BT Post Test'[ResponseValue]), 'BT Post Test'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]))"
+BT Teacher Survey,BTTeacherSurveyScore,"CALCULATE(AVERAGE('BT Teacher Survey'[Rate the engagement and support provided by JA Staff during our visit day today]), 'BT Teacher Survey'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]))"
+BT Volunteer Survey,BT Volunteer Survey,"CALCULATE(AVERAGE('BT Volunteer Survey'[Overall, how satisfied are you with your volunteer experience?]), 'BT Volunteer Survey'[SchoolYear] = SELECTEDVALUE('Date'[SchoolYear]))"
+File_Metadata,Source Data Last Updated,"""Excel File Last Updated: "" & FORMAT(MAX('File_Metadata'[Last Updated]), ""MMM dd, yyyy h:mm AM/PM"")"
