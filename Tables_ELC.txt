@@ -1,0 +1,300 @@
+// === Table: CDP School Info ===
+let
+    FileBinary = Binary.Buffer(Web.Contents("https://centuric.sharepoint.com/sites/Capstone/Documents/Experience/Career%20Discover%20Park%20MASTER%20Workbook/25-26%20Career%20Discovery%20Park%20Workbook.xlsx")),
+    Source = Excel.Workbook(FileBinary, null, true),
+    TeacherComm_Table = Source{[Item="TeacherComm",Kind="Table"]}[Data],
+    WPB_SchoolInfo_Table = Source{[Item="WPB_Schoolnfo",Kind="Table"]}[Data],
+    #"Changed Type3" = Table.TransformColumnTypes(WPB_SchoolInfo_Table,{{"BCRM LOOKUPID", type text}, {"School Name", type text}, {"# of Students Pending", Int64.Type}, {"Actual Number Of Students", Int64.Type}, {"Verified Students", Int64.Type}, {"Visit Start Date", type date}}),
+    #"Added Custom1" = Table.AddColumn(#"Changed Type3", "Program", each "WPB CF"),
+    #"Changed Type" = Table.TransformColumnTypes(TeacherComm_Table,{{"BCRM LOOKUPID", type text}, {"School Name", type text}, {"# of Visit Days", Int64.Type}, {"Visit Start Date-first emails", type date}, {"Visit Start Date-2nd emails", type date}, {"JAFP Visit Date(s)", type text}, {"# of Students Pending", Int64.Type}, {"Verified Students (from Program Verification Form)", Int64.Type}, {"Share Day", type text}, {"School Type", type text}, {"County", type text}, {"Visit Day Time", type text}, {"School Address", type text}, {"School Hours", type text}, {"Lead Teacher's Name ", type text}, {"all other teachers teaching curriculum", type text}, {"Lead Teacher's Emails", type text}, {"CC: Teacher's Emails", type text}, {"Date Confirmed Information", type any}, {"School Phone #", type any}, {"Testing Coordinator Name and Email", type text}, {"Assistant Principal Name and Email", type text}, {"Principal Name                                                     (New Principal)", type text}, {"Principal Email", type text}, {"Lead Teacher Cell", type any}, {"Request Form Completed", type text}, {"Region", type text}}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Changed Type",{"BCRM LOOKUPID", "School Name", "Visit Start Date-2nd emails", "# of Students Pending", "Verified Students (from Program Verification Form)", "School Type", "Region"}),
+    #"Renamed Columns" = Table.RenameColumns(#"Removed Other Columns",{{"Visit Start Date-2nd emails", "Visit Start Date"}, {"Verified Students (from Program Verification Form)", "Verified Students"}}),
+    #"Added Custom" = Table.AddColumn(#"Renamed Columns", "Program", each "CDP"),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom",{{"# of Students Pending", Int64.Type}, {"BCRM LOOKUPID", type text}, {"Verified Students", Int64.Type}, {"Program", type text}}),
+    #"Filtered Rows" = Table.SelectRows(#"Changed Type1", each ([School Name] <> "Lisa's Test School" and [School Name] <> "Test School")),
+    #"Trimmed Text1" = Table.TransformColumns(#"Filtered Rows",{{"BCRM LOOKUPID", Text.Trim, type text}}),
+    #"Merged Queries" = Table.NestedJoin(#"Trimmed Text1", {"BCRM LOOKUPID"}, CDPVistDayForm, {"School BCRM Lookup Id"}, "CDPVistDayForm", JoinKind.LeftOuter),
+    #"Expanded CDPVistDayForm" = Table.ExpandTableColumn(#"Merged Queries", "CDPVistDayForm", {"Actual Number Of Students", "TotalStudentAccommodations", "LanguageTranslationStudents", "VisuallyImpairedStudents", "HearingImpairedStudents", "AdditionalTimeStudents", "MobilityAssistanceStudents", "CommunicationSupportStudents", "QuietSpaceSupportStudents"}, {"Actual Number Of Students", "TotalStudentAccommodations", "LanguageTranslationStudents", "VisuallyImpairedStudents", "HearingImpairedStudents", "AdditionalTimeStudents", "MobilityAssistanceStudents", "CommunicationSupportStudents", "QuietSpaceSupportStudents"}),
+    #"CombineTables" = Table.Combine({#"Expanded CDPVistDayForm", #"Added Custom1"}),
+    #"Changed Type4" = Table.TransformColumnTypes(CombineTables,{{"Program", type text}, {"Actual Number Of Students", Int64.Type}}),
+    #"Added Custom2" = Table.AddColumn(#"Changed Type4", "SchoolTypeCategory", each if [School Type] = "BCPS" then "BCPS" else "Non-BCPS"),
+    #"Changed Type5" = Table.TransformColumnTypes(#"Added Custom2",{{"SchoolTypeCategory", type text}}),
+    #"Trimmed Text" = Table.TransformColumns(#"Changed Type5",{{"School Type", Text.Trim, type text}, {"BCRM LOOKUPID", Text.Trim, type text}})
+in
+    #"Trimmed Text"
+
+// === Table: Recruitment ===
+let
+FileBinary = Binary.Buffer(Web.Contents("https://centuric.sharepoint.com/sites/Capstone/Documents/Operations/Rebecca's%20WIP/Recruitment%20SY25-26.xlsx")),
+    Source = Excel.Workbook(FileBinary, null, true),
+        BT_recruitment = Source{[Item="BT_recruitment",Kind="Table"]}[Data],
+    #"Trimmed Text" = Table.TransformColumns(BT_recruitment,{{"BCRM LookUpId", Text.Trim, type text}}),
+    CDP_recruitment_Table = Source{[Item="CDP_recruitment",Kind="Table"]}[Data],
+    #"Trimmed Text1" = Table.TransformColumns(CDP_recruitment_Table,{{"BCRM LookUpId", Text.Trim, type text}}),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Trimmed Text1",{{"BCRM LookUpId", type text}, {"School Name", type text}, {"School Type", type text}, {"Program", type text}, {"School Year", type text}, {"January", Int64.Type}, {"February", Int64.Type}, {"March", Int64.Type}, {"April", Int64.Type}, {"May", Int64.Type}, {"June", Int64.Type}, {"July", Int64.Type}, {"August", Int64.Type}, {"September", Int64.Type}, {"October", Int64.Type}, {"November", Int64.Type}, {"December", Int64.Type}, {"Actual visit day Count", Int64.Type}}),
+    #"Added Custom1" = Table.AddColumn(#"Changed Type1", "SchoolYearDate", each Text.Combine({"01-01-", [School Year]},"")),
+    #"Changed Type" = Table.TransformColumnTypes(#"Trimmed Text",{{"School Name", type text}, {"School Type", type text}, {"Program", type text}, {"School Year", type text}, {"January", Int64.Type}, {"February", Int64.Type}, {"March", Int64.Type}, {"April", Int64.Type}, {"May", Int64.Type}, {"June", Int64.Type}, {"July", Int64.Type}, {"August", Int64.Type}, {"September", Int64.Type}, {"October", Int64.Type}, {"November", Int64.Type}, {"December", Int64.Type}, {"Actual Visit Day Count", Int64.Type}, {"BCRM LookUpId", type text}}),
+    #"Added Custom" = Table.AddColumn(#"Changed Type", "SchoolYearDate", each Text.Combine({ "01-01-",[School Year]},"")),
+     #"CombineTables" = Table.Combine({#"Added Custom", #"Added Custom1"}),
+    #"Changed Type2" = Table.TransformColumnTypes(CombineTables,{{"SchoolYearDate", type datetime}}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Changed Type2",{"BCRM LookUpId", "School Name", "School Type", "Program", "School Year", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December", "SchoolYearDate"})
+in
+    #"Removed Other Columns"
+
+// === Table: BT-School Info ===
+let
+
+    FileBinary = Binary.Buffer(Web.Contents("https://centuric.sharepoint.com/sites/Capstone/Documents/Experience/BizTown%20MASTER%20Workbook/25-26%20BizTown%20Workbook.xlsx")),
+    Source = Excel.Workbook(FileBinary, null, true),
+    TeacherComm_Table = Source{[Item="TeacherComm",Kind="Table"]}[Data],
+    #"Trimmed Text1" = Table.TransformColumns(TeacherComm_Table,{{"BCRM LookupId", Text.Trim, type text}}),
+    OtherSchoolsComm_Table = Source{[Item="OtherSchoolsComm",Kind="Table"]}[Data],
+    #"Trimmed Text2" = Table.TransformColumns(OtherSchoolsComm_Table,{{"BCRM LookupId", Text.Trim, type text}}),
+    #"Filtered Rows1" = Table.SelectRows(#"Trimmed Text2", each ([School Name] <> "Lisa's Elementary School" and [School Name] <> "Test Elementary School" and [School Name] <> "Test School")),
+    #"Removed Other Columns1" = Table.SelectColumns(#"Filtered Rows1",{"BCRM LookupId", "Date of School Visit", "School Name", "Projected Student Count", "School Type"}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Trimmed Text1",{"BCRM LookupId", "Date of School Visit", "School Name", "Projected Student Count", "Region "}),
+    #"Replaced Value" = Table.ReplaceValue(#"Removed Other Columns","School Transformation Office","STO",Replacer.ReplaceText,{"Region "}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Replaced Value",{{"Date of School Visit", type date}, {"School Name", type text}, {"Projected Student Count", Int64.Type}}),
+    #"Added Custom" = Table.AddColumn(#"Changed Type", "School Type", each "BCPS"),
+    #"Trimmed Text" = Table.TransformColumns(#"Added Custom",{{"BCRM LookupId", Text.Trim, type text}}),
+    #"CombineTables" = Table.Combine({#"Trimmed Text", #"Removed Other Columns1"}),
+    #"Changed Type1" = Table.TransformColumnTypes(CombineTables,{{"School Type", type text}, {"BCRM LookupId", type text}}),
+    #"Filtered Rows" = Table.SelectRows(#"Changed Type1", each ([School Name] <> "Lisa's Elementary School" and [School Name] <> "Test Elementary School" and [School Name] <> "Test School")),
+    #"Changed Type2" = Table.TransformColumnTypes(#"Filtered Rows",{{"Date of School Visit", type date}, {"School Name", type text}, {"Projected Student Count", Int64.Type}}),
+    #"Added Custom1" = Table.AddColumn(#"Changed Type2", "SchoolTypeCategory", each if [School Type] = "BCPS" then "BCPS" else "Non-BCPS"),
+    #"Changed Type3" = Table.TransformColumnTypes(#"Added Custom1",{{"SchoolTypeCategory", type text}})
+in
+    #"Changed Type3"
+
+// === Table: BT_Accommodations ===
+let
+ FileBinary = Binary.Buffer(Web.Contents("https://centuric.sharepoint.com/sites/Capstone/Documents/Experience/BizTown%20Visit%20Day/SY%2025-26/BizTown%20Visit%20Day%20Workbook/25-26%20Visit%20Day%20Data%20Workbook.xlsx")),
+    Source = Excel.Workbook(FileBinary, null, true),
+    BT_Accommodations_Table = Source{[Item="BT_Accommodations", Kind="Table"]}[Data],
+    #"Trimmed Text1" = Table.TransformColumns(BT_Accommodations_Table,{{"BCRM LookUpId", Text.Trim, type text}}),
+    VisitData_Table = Source{[Item="VisitData", Kind="Table"]}[Data],
+    #"Promoted Headers" = Table.PromoteHeaders(VisitData_Table, [PromoteAllScalars=true]),
+    #"Removed Top Rows" = Table.Skip(#"Promoted Headers",1),
+    #"Changed Type2" = Table.TransformColumnTypes(#"Removed Top Rows",{{"Total Number of Students Attended", Int64.Type}, {"Column9", Int64.Type}}),
+    #"Trimmed Text2" = Table.TransformColumns(#"Changed Type2",{{"BCRM LookupId", Text.Trim, type text}}),
+    #"Added Custom" = Table.AddColumn(#"Trimmed Text2", "TotalStudentsAttended", each if [Total Number of Students Attended] = null then [Column9] else if [Column9] = null then [Total Number of Students Attended] else [Total Number of Students Attended] +[Column9]),
+    #"Removed Other Columns" = Table.SelectColumns(#"Added Custom",{"BCRM LookupId", "Date of School Visit", "School Name", "School Region", "School Type", "Verified Student Count", "TotalStudentsAttended"}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Trimmed Text1",{{"BCRM LookUpId", type text}, {"Visit Date", type date}, {"School Names", type text}, {"Total Students Supported", Int64.Type}, {"Number who used Language Translation Support", Int64.Type}, {"Number Who used Visual Impariment Support", Int64.Type}, {"Number Who used Hearing Impairment Support", Int64.Type}, {"Number Who Used Additional Time", Int64.Type}, {"Number Who Used Mobility Assistance", Int64.Type}, {"Number Who Used Communication Support", Int64.Type}, {"Number Who Used Quiet Space", Int64.Type}, {"Storefont(s)", type text}, {"Resources Provided", type text}, {"Staff Support Need (if any)", type text}, {"Educator Feedback Notes", type text}}),
+    #"JoinedTables" = Table.Join(#"Removed Other Columns", "BCRM LookupId", #"Changed Type", "BCRM LookUpId", JoinKind.LeftOuter),
+    #"Changed Type1" = Table.TransformColumnTypes(JoinedTables,{{"Verified Student Count", Int64.Type}, {"BCRM LookUpId", type text}, {"Visit Date", type date}, {"School Names", type text}, {"Number who used Language Translation Support", Int64.Type}, {"Number Who used Visual Impariment Support", Int64.Type}, {"Number Who used Hearing Impairment Support", Int64.Type}, {"Number Who Used Additional Time", type text}, {"Number Who Used Mobility Assistance", Int64.Type}, {"Number Who Used Communication Support", Int64.Type}, {"Number Who Used Quiet Space", Int64.Type}, {"Storefont(s)", type text}, {"Resources Provided", type text}, {"Staff Support Need (if any)", type text}, {"Educator Feedback Notes", type text}, {"BCRM LookupId", type text}, {"Date of School Visit", type date}, {"School Name", type text}, {"School Region", type text}, {"School Type", type text}, {"TotalStudentsAttended", Int64.Type}}),
+    #"Removed Other Columns1" = Table.SelectColumns(#"Changed Type1",{"BCRM LookupId", "Date of School Visit", "School Name", "School Region", "School Type", "Verified Student Count", "TotalStudentsAttended", "Total Students Supported", "Number who used Language Translation Support", "Number Who used Visual Impariment Support", "Number Who used Hearing Impairment Support", "Number Who Used Additional Time", "Number Who Used Mobility Assistance", "Number Who Used Communication Support", "Number Who Used Quiet Space", "Storefont(s)", "Resources Provided", "Staff Support Need (if any)", "Educator Feedback Notes"}),
+    #"Sorted Rows" = Table.Sort(#"Removed Other Columns1",{{"BCRM LookupId", Order.Ascending}}),
+    #"Grouped Rows" = Table.Group(#"Sorted Rows", {"BCRM LookupId"}, {{"School Name", each List.Min([School Name]), type nullable text}, {"Date of School Visit", each List.Max([Date of School Visit]), type nullable date}, {"School Region", each List.Max([School Region]), type nullable text}, {"School Type", each List.Max([School Type]), type nullable text}, {"Verified Student Count", each List.Sum([Verified Student Count]), type nullable number}, {"TotalStudentsAttended", each List.Sum([TotalStudentsAttended]), type nullable number}, {"Total Students Supported", each List.Sum([Total Students Supported]), type nullable number}, {"Number who used Language Translation Support", each List.Sum([Number who used Language Translation Support]), type nullable number}, {"Number Who used Visual Impariment Support", each List.Sum([Number Who used Visual Impariment Support]), type nullable number}, {"Number Who used Hearing Impairment Support", each List.Sum([Number Who used Hearing Impairment Support]), type nullable number}, {"Number Who Used Additional Time", each List.Sum([Number Who Used Additional Time]), type nullable text}, {"Number Who Used Mobility Assistance", each List.Sum([Number Who Used Mobility Assistance]), type nullable number}, {"Number Who Used Communication Support", each List.Sum([Number Who Used Communication Support]), type nullable number}, {"Number Who Used Quiet Space", each List.Sum([Number Who Used Quiet Space]), type nullable number}, {"Educator Feedback Notes", each List.Max([Educator Feedback Notes]), type nullable text}}),
+    #"Trimmed Text" = Table.TransformColumns(#"Grouped Rows",{{"School Type", Text.Trim, type text}})
+in
+    #"Trimmed Text"
+
+// === Table: BCRMLookUpId's ===
+let
+    Source = OData.Feed("https://bcrmprod.ja.org/prod/ODataQuery.ashx?databasename=2313p&AdHocQueryID=78ddcea0-d71d-40db-a2a6-d3648cad496d", null, [Implementation="2.0"]),
+    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Name", type text}, {"LookupID", type text}, {"ParentCorporationName", type text}, {"QUERYRECID", type text}}),
+    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"QUERYRECID"}),
+    #"Added Custom" = Table.AddColumn(#"Removed Columns", "SchoolType", each if [ParentCorporationName] = "The School Board Of Broward County" then "BCPS" else if [ParentCorporationName] = "The School District of Palm Beach County" then "PB" else "Private"),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom",{{"SchoolType", type text}}),
+    #"Trimmed Text" = Table.TransformColumns(#"Changed Type1",{{"Name", Text.Trim, type text}, {"LookupID", Text.Trim, type text}})
+in
+    #"Trimmed Text"
+
+// === Table: KPIs1 ===
+let
+FileBinary = Binary.Buffer(Web.Contents("https://centuric.sharepoint.com/sites/Capstone/Documents/Experience/BizTown%20MASTER%20Workbook/25-26%20BizTown%20Workbook.xlsx")),
+    Source = Excel.Workbook(FileBinary, null, true),
+    KPIs = Source{[Item="KPIs",Kind="Table"]}[Data],
+    #"Removed Blank Rows" = Table.SelectRows(KPIs, each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null}))),
+    #"Changed Type" = Table.TransformColumnTypes(#"Removed Blank Rows",{{"School Year", Int64.Type}, {"KPI", type text}, {"Target Value", type number}, {"Target Metric", type text}}),
+    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"School Year", "Fiscal Year"}}),
+    #"Added Custom" = Table.AddColumn(#"Renamed Columns", "Program", each "BT"),
+    #"Appended Query" = Table.Combine({#"Added Custom", CDP_KPIs}),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Appended Query",{{"Program", type text}, {"Target Value", type number}})
+in
+    #"Changed Type1"
+
+// === Table: CDP Survey Stars ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric.sharepoint.com/sites/Capstone/Documents/Operations/Data/JA%20Elevate%20App/JA%20Elevate%20Reports%20by%20Month/October%202025%20Student%20App%20Data.xlsm"), null, false),
+    TOTALS_sheet = Source{[Item="TOTALS",Kind="Sheet"]}[Data],
+    FilterNullAndWhitespace = each List.Select(_, each _ <> null and (not (_ is text) or Text.Trim(_) <> "")),
+    #"Transposed Table" = Table.Transpose(TOTALS_sheet),
+    #"Added Custom" = Table.AddColumn(#"Transposed Table", "IsEmptyRow", each try List.IsEmpty(FilterNullAndWhitespace(Record.FieldValues(_))) otherwise false),
+    #"Added Index" = Table.AddIndexColumn(#"Added Custom", "Index", -1),
+    #"Added Custom1" = Table.AddColumn(#"Added Index", "Section", each if [IsEmptyRow] then -1 else if try #"Added Index"[IsEmptyRow]{[Index]} otherwise true then [Index] else null),
+    #"Removed Blank Rows" = Table.SelectRows(#"Added Custom1", each not [IsEmptyRow]),
+    #"Filled Down" = Table.FillDown(#"Removed Blank Rows", {"Section"}),
+    #"Grouped Rows" = Table.Group(#"Filled Down", {"Section"}, {{"Rows", each _}}, GroupKind.Local),
+    #"Selected Group" = #"Grouped Rows"[Rows]{0},
+    #"Removed Columns" = Table.RemoveColumns(#"Selected Group", {"IsEmptyRow", "Index", "Section"}),
+    #"Transposed Table1" = Table.Transpose(#"Removed Columns"),
+    #"Added Custom2" = Table.AddColumn(#"Transposed Table1", "IsEmptyRow", each try List.IsEmpty(FilterNullAndWhitespace(Record.FieldValues(_))) otherwise false),
+    #"Added Index1" = Table.AddIndexColumn(#"Added Custom2", "Index", -1),
+    #"Added Custom3" = Table.AddColumn(#"Added Index1", "Section", each if [IsEmptyRow] then -1 else if try #"Added Index1"[IsEmptyRow]{[Index]} otherwise true then [Index] else null),
+    #"Removed Blank Rows1" = Table.SelectRows(#"Added Custom3", each not [IsEmptyRow]),
+    #"Filled Down1" = Table.FillDown(#"Removed Blank Rows1", {"Section"}),
+    #"Grouped Rows1" = Table.Group(#"Filled Down1", {"Section"}, {{"Rows", each _}}, GroupKind.Local),
+    #"Selected Group1" = #"Grouped Rows1"[Rows]{0},
+    #"Removed Columns1" = Table.RemoveColumns(#"Selected Group1", {"IsEmptyRow", "Index", "Section"}),
+    #"Filtered Rows" = Table.SelectRows(#"Removed Columns1", each ([Column2] <> null)),
+    #"Removed Other Columns" = Table.SelectColumns(#"Filtered Rows",{"Column1", "Column7", "Column8"}),
+    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Other Columns", [PromoteAllScalars=true]),
+    #"Renamed Columns" = Table.RenameColumns(#"Promoted Headers",{{"Date ", "Date"}}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"Date", type date}, {"Student Survey (4/5 stars)", type number}, {"Student Survey Technology (4/5 Stars)", type number}}),
+    #"Appended Query" = Table.Combine({#"Changed Type", #"CDP Survey 5_26", #"CDP Survey 4_26", #"CDP Survey 3_26", #"CDP Survey 2_26", #"CDP Survey 1_26", #"CDP Survey 12_25", #"CDP Survey Stars 11_25"}),
+    #"Sorted Rows" = Table.Sort(#"Appended Query",{{"Date", Order.Descending}})
+in
+    #"Sorted Rows"
+
+// === Table: CDP Volunteer Survey ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric-my.sharepoint.com/personal/morgan_jasouthflorida_org/Documents/2025-2026%20JA%20Career%20Discovery%20Park%20Volunteer%20Survey.xlsx"), null, true),
+    OfficeForms.Table_Table = Source{[Item="OfficeForms.Table",Kind="Table"]}[Data],
+    #"Removed Other Columns" = Table.SelectColumns(OfficeForms.Table_Table,{"Id", "Start time", "Overall, how satisfied are you with your volunteer experience?"}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Removed Other Columns",{{"Id", Int64.Type}, {"Start time", type datetime}, {"Overall, how satisfied are you with your volunteer experience?", Int64.Type}})
+in
+    #"Changed Type"
+
+// === Table: CDP Teacher Survey ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric-my.sharepoint.com/personal/rebecca_jasouthflorida_org/Documents/SY%2025-26%20Career%20Discovery%20Park%20Visit%20Day%20Teacher%20Feedback%20Survey.xlsx"), null, true),
+    OfficeForms.Table_Table = Source{[Item="OfficeForms.Table",Kind="Table"]}[Data],
+    #"Removed Other Columns" = Table.SelectColumns(OfficeForms.Table_Table,{"Id", "Start time", "How satisfied are you with the technological solutions provided by Junior Achievement during your experience? "}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Removed Other Columns",{{"Id", Int64.Type}, {"Start time", type datetime}, {"How satisfied are you with the technological solutions provided by Junior Achievement during your experience? ", Int64.Type}})
+in
+    #"Changed Type"
+
+// === Table: BT Post Test ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric-my.sharepoint.com/personal/rebecca_jasouthflorida_org/Documents/JA%20BizTown%20Post-Test%20for%20All%20Students.xlsx"), null, true),
+    OfficeForms.Table_Table = Source{[Item="OfficeForms.Table",Kind="Table"]}[Data],
+    #"Removed Other Columns" = Table.SelectColumns(OfficeForms.Table_Table,{"Id", "Start time", "Select your school from the drop-down box", "Enter your FIRST name", "Enter your LAST name", "Enter your teacher's LAST name. ", "Rate your day at JA BizTown? (1 to 5 stars - Five stars is I loved my day!)"}),
+    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns", {"Select your school from the drop-down box", "Enter your FIRST name", "Enter your LAST name", "Enter your teacher's LAST name. "}),
+    #"Added Custom" = Table.AddColumn(#"Removed Duplicates", "ResponseValue", each let v = [#"Rate your day at JA BizTown? (1 to 5 stars - Five stars is I loved my day!)"],
+    counts =
+        if v = null then
+            null
+        else if Value.Is(v, type list) then
+            // Column already holds a list
+            List.Transform(v, (x) => Text.Length(Text.Select(Text.From(x), {"⭐","★"})))
+        else
+            // Try to parse text as JSON array; if that fails, treat as plain text
+            let a = try Json.Document(Text.From(v)) otherwise null in
+            if a <> null and Value.Is(a, type list) then
+                List.Transform(a, (x) => Text.Length(Text.Select(Text.From(x), {"⭐","★"})))
+            else
+                { Text.Length(Text.Select(Text.From(v), {"⭐","★"})) },
+    res = if counts = null or List.Count(counts) = 0 then null else List.Max(counts)
+in
+    res),
+    #"Changed Type" = Table.TransformColumnTypes(#"Added Custom",{{"Id", Int64.Type}, {"Start time", type date}, {"Select your school from the drop-down box", type text}, {"Enter your FIRST name", type text}, {"Enter your LAST name", type text}, {"Enter your teacher's LAST name. ", type text}, {"ResponseValue", Int64.Type}})
+in
+    #"Changed Type"
+
+// === Table: BT Teacher Survey ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric-my.sharepoint.com/personal/rebecca_jasouthflorida_org/Documents/SY%2025-26%20BizTown%20Visit%20Day%20Teacher%20Feedback%20Survey.xlsx"), null, true),
+    OfficeForms.Table_Table = Source{[Item="OfficeForms.Table",Kind="Table"]}[Data],
+    #"Removed Other Columns" = Table.SelectColumns(OfficeForms.Table_Table,{"Id", "Start time", "Rate the engagement and support provided by JA Staff during our visit day today"}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Removed Other Columns",{{"Id", Int64.Type}, {"Start time", type date}, {"Rate the engagement and support provided by JA Staff during our visit day today", Int64.Type}})
+in
+    #"Changed Type"
+
+// === Table: BT Volunteer Survey ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric-my.sharepoint.com/personal/morgan_jasouthflorida_org/Documents/2025-2026%20JA%20BizTown%20Volunteer%20Feedback.xlsx"), null, true),
+    OfficeForms.Table_Table = Source{[Item="OfficeForms.Table",Kind="Table"]}[Data],
+    #"Removed Other Columns" = Table.SelectColumns(OfficeForms.Table_Table,{"Id", "Start time", "Overall, how satisfied are you with your volunteer experience?"}),
+    #"Changed Type" = Table.TransformColumnTypes(#"Removed Other Columns",{{"Id", Int64.Type}, {"Start time", type date}, {"Overall, how satisfied are you with your volunteer experience?", Int64.Type}})
+in
+    #"Changed Type"
+
+// === Table: BT School City ===
+let
+Source = #"BT City Staging",
+    #"Trimmed Text" = Table.TransformColumns(Source,{{"School Name", Text.Trim, type text}}),
+    #"Merged Queries" = Table.NestedJoin(#"Trimmed Text", {"School Name"}, #"BCRMLookUpId's", {"Name"}, "BCRMLookUpId's", JoinKind.LeftOuter),
+    #"Expanded BCRMLookUpId's" = Table.ExpandTableColumn(#"Merged Queries", "BCRMLookUpId's", {"LookupID"}, {"LookupID"})
+in
+    #"Expanded BCRMLookUpId's"
+
+// === Table: BT City Staging ===
+let
+    FileBinary = Binary.Buffer(Web.Contents("https://centuric.sharepoint.com/sites/Capstone/Documents/Experience/BizTown%20MASTER%20Workbook/25-26%20BizTown%20Workbook.xlsx")),
+    Source = Excel.Workbook(FileBinary, null, true),
+    SchoolAddress_Table = Source{[Item="SchoolAddress",Kind="Table"]}[Data],
+    #"Changed Type" = Table.TransformColumnTypes(SchoolAddress_Table,{{"School Name", type text}, {"School Address", type text}, {"School Hours", type text}, {"School Phone #", type text}, {"Teacher Phone #s", type text}, {"Grade Level", type text}}),
+    #"Added Custom" = Table.AddColumn(#"Changed Type", "School City", each Text.Trim(Text.BetweenDelimiters([School Address] & " ", ", ", ", "))),
+    #"Trimmed Text" = Table.TransformColumns(#"Added Custom",{{"School City", Text.Trim, type text}}),
+    #"Removed Columns" = Table.RemoveColumns(#"Trimmed Text",{"School Address", "School Hours", "School Phone #", "Teacher Phone #s", "Grade Level"})
+in
+#"Removed Columns"
+
+// === Table: CDP School City ===
+let
+    FileBinary = Binary.Buffer(Web.Contents("https://centuric.sharepoint.com/sites/Capstone/Documents/Experience/Career%20Discover%20Park%20MASTER%20Workbook/25-26%20Career%20Discovery%20Park%20Workbook.xlsx")),
+    Source = Excel.Workbook(FileBinary, null, true),
+    TeacherComm_Table = Source{[Item="TeacherComm",Kind="Table"]}[Data],
+    #"Removed Columns" = Table.RemoveColumns(TeacherComm_Table,{"# of Visit Days", "Visit Start Date-first emails", "Visit Start Date-2nd emails", "JAFP Visit Date(s)", "# of Students Pending", "Verified Students (from Program Verification Form)", "Share Day", "School Type", "County", "Visit Day Time", "School Hours", "Lead Teacher's Name ", "all other teachers teaching curriculum", "Lead Teacher's Emails", "CC: Teacher's Emails", "Date Confirmed Information", "School Phone #", "Testing Coordinator Name and Email", "Assistant Principal Name and Email", "Principal Name                                                     (New Principal)", "Principal Email", "Lead Teacher Cell", "Request Form Completed", "Region", "Notes"}),
+    #"Filtered Rows" = Table.SelectRows(#"Removed Columns", each ([School Address] <> null)),
+    #"Filtered Rows1" = Table.SelectRows(#"Filtered Rows", each [BCRM LOOKUPID] <> null and [BCRM LOOKUPID] <> ""),
+    #"Added Custom" = Table.AddColumn(#"Filtered Rows1", "City", each Text.Trim(Text.BetweenDelimiters([School Address] & " ", ", ", ", "))),
+    #"Removed Columns1" = Table.RemoveColumns(#"Added Custom",{"School Address"}),
+    #"Removed Duplicates" = Table.Distinct(#"Removed Columns1", {"BCRM LOOKUPID"})
+in
+    #"Removed Duplicates"
+
+// === Table: BT Non BCPS Revenue ===
+let
+    Source = OData.Feed("https://bcrmprod.ja.org/prod/ODataQuery.ashx?databasename=2313p&AdHocQueryID=a1f9ef6e-ca7a-418f-9024-3f335290aa53", null, [Implementation="2.0"]),
+    #"Changed Type" = Table.TransformColumnTypes(Source,{{"ConstituentLastOrganizationGroupHouseholdname", type text}, {"ConstituentLookupID", type text}, {"Amount", type number}, {"Date", type date}, {"PastDue", type number}, {"TotalPaid", type number}}),
+    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"BasecurrencyID", "BasecurrencyID1", "BasecurrencyID2", "QUERYRECID", "RevenueSplitsRevenueDetailsApplicationDetailsPledgesPledgeDetailsTransactiontype"}),
+    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"ConstituentLastOrganizationGroupHouseholdname", "School Name"}, {"ConstituentLookupID", "BCRM LookupID"}}),
+    #"Added Conditional Column" = Table.AddColumn(#"Renamed Columns", "Type", each if [TotalPaid] = null then "Donation" else "Pledge")
+in
+    #"Added Conditional Column"
+
+// === Table: CDP Non BCPS Revenue ===
+let
+    Source = OData.Feed("https://bcrmprod.ja.org/prod/ODataQuery.ashx?databasename=2313p&AdHocQueryID=92aeb54b-a61d-4735-9cbb-9f04f3c8068c", null, [Implementation="2.0"]),
+    #"Changed Type" = Table.TransformColumnTypes(Source,{{"ConstituentLastOrganizationGroupHouseholdname", type text}, {"ConstituentLookupID", type text}, {"Amount", type number}, {"Date", type date}, {"PastDue", type number}, {"TotalPaid", type number}}),
+    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"BasecurrencyID", "BasecurrencyID1", "BasecurrencyID2", "QUERYRECID", "RevenueSplitsRevenueDetailsApplicationDetailsPledgesPledgeDetailsTransactiontype"}),
+    #"Renamed Columns" = Table.RenameColumns(#"Removed Columns",{{"ConstituentLastOrganizationGroupHouseholdname", "School Name"}, {"ConstituentLookupID", "BCRM LookupID"}}),
+    #"Added Conditional Column" = Table.AddColumn(#"Renamed Columns", "Type", each if [TotalPaid] = null then "Donation" else "Pledge")
+in
+    #"Added Conditional Column"
+
+// === Table: File_Metadata ===
+let
+    // 1. We use the exact path WITH "%20". 
+    // Power Query requires this, otherwise it sends raw spaces and the server returns a 404 error!
+    ApiUrl = "https://centuric.sharepoint.com/sites/Capstone/_api/web/GetFileByServerRelativeUrl('/sites/Capstone/Documents/Experience/BizTown%20MASTER%20Workbook/25-26%20BizTown%20Workbook.xlsx')",
+    
+    // 2. Ping the API and request a lightweight JSON response
+    RawData = Web.Contents(
+    "https://centuric.sharepoint.com/sites/Capstone/_api/web",
+    [
+        RelativePath = "GetFileByServerRelativeUrl('/sites/Capstone/Documents/Experience/BizTown%20MASTER%20Workbook/25-26%20BizTown%20Workbook.xlsx')",
+        Headers = [Accept = "application/json"]
+    ]
+),
+    
+    // 3. Parse the JSON
+    JsonData = Json.Document(RawData),
+    
+    // 4. Extract the "TimeLastModified" property
+    ModifiedString = JsonData[TimeLastModified],
+    
+    // 5. Convert it from text into a proper Date/Time value (This defaults to UTC time)
+    UtcDate = DateTime.From(DateTimeZone.FromText(ModifiedString)),
+    
+    // 6. Adjust for Timezone. 
+    // We subtract 4 hours for Eastern Daylight Time. (Change the 4 to a 5 for EST, or adjust based on your local timezone)
+    // LocalDate = UtcDate - #duration(0, 4, 0, 0),
+    
+    // 7. Turn it into a 1-row table for your Power BI report
+    ResultTable = #table(type table[#"Last Updated" = datetime], {{UtcDate}})
+in
+    ResultTable
+

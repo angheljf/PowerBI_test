@@ -1,0 +1,642 @@
+// === Table: FY 25-26 CURRENT DATA ===
+let
+    FileBinary = Binary.Buffer(Web.Contents("https://centuric.sharepoint.com/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx")),
+    Source = Excel.Workbook(FileBinary, null, true),
+    CurrentData_Table = Source{[Item="Table247",Kind="Table"]}[Data],
+    #"Changed Type1" = Table.TransformColumnTypes(CurrentData_Table,{{"Student#(lf)First Name", type any}, {"Student#(lf)Last Name", type text}, {"Student Current Status", type text}, {"Withdraw Date", type date}, {"High School", type text}, {"School ID#", type any}, {"Birthdate", type date}, {"Age at Enrollment", Int64.Type}, {"Address", type text}, {"City", type text}, {"Zip Code", type text}, {"Household Occupants", type text}, {"Household Income", type text}, {"Household Arrangement", type text}, {"Last 4 of SSN", type text}, {"Gender", type text}, {"Race", type text}, {"Ethnicity", type text}, {"Cultural Influence", type text}, {"Language at Home", type text}, {"Phone Number", type text}, {"Email", type text}, {"Onboard Complete#(lf)(i.e. All Platforms, All State Docs)", type text}, {"Soft Skills Curriculum Completed", type text}, {"Badge Credentials Completed", Int64.Type}, {"ABCI Workshops Completed", type text}, {"Interplay Learning", type text}, {"Pre-Test", type number}, {"January Assessment", type number}, {"February Assessment", type number}, {"March Assessment", type number}, {"April Assessment", type number}, {"Post-Test", type number}, {"Knowledge Gained %", type number}, {"Employment Folder#(lf)(i.e. SSC, ID, Resume, LinkedIn acct)", type text}, {"Industry Certifications (3)#(lf)(i.e. OSHA, CPR, Forklift, etc.)", type text}, {"Networking and #(lf)Mock Interviews#(lf)(3 successful)", type text}, {"Interest Survey Results:#(lf)Occupation for FLDOE#(lf)(Pre-Apprenticeship ID# Request)", type text}, {"FLDOE #(lf)Pre-Apprenticeship ID#s", type text}, {"State Registration Form Completed", type text}, {"Occupation Declared to FLDOE", type text}, {"InPlace Account", type text}, {"January #(lf)CM Note#(lf)(Date)", type text}, {"Satisfaction Survey:#(lf)January", type text}, {"February#(lf)CM Note#(lf)(Date)", type text}, {"Satisfaction Survey:#(lf)February", type text}, {"March#(lf)CM Note#(lf)(Date)", type text}, {"Satisfaction Survey:#(lf)March", type text}, {"April#(lf)CM Note#(lf)(Date)", type text}, {"Satisfaction Survey:#(lf)April", type text}, {"May #(lf)CM Note#(lf)(Date)", type text}, {"Satisfaction Survey:#(lf)May", type text}, {"June #(lf)CM Note#(lf)(Date)", type text}, {"Satisfaction Survey:#(lf)June", type text}, {"Ready for Placement", type text}, {"JAESI Completed#(lf)(Plan Uploaded)", type text}, {"Graduate Placement Tier System", type text}, {"Assigned Employment Specialist", type text}, {"Placement#(lf)Y/N?", type text}, {"Employment Location#(lf)(Address)", type text}, {"Employment Hire Date#(lf)(Employment Verfication Uploaded)", type text}, {"Employment Follow-Up#(lf)30-Day", type text}, {"30-Day Compliance#(lf)Y/N?", type text}, {"Employment Follow-Up#(lf)60-Day", type text}, {"60-Day Compliance#(lf)Y/N?", type text}, {"Employment Follow-Up#(lf)90-Day", type text}, {"90-Day Compliance#(lf)Y/N?", type text}}),
+    #"Replaced Errors" = Table.ReplaceErrorValues(#"Changed Type1", {{"Age at Enrollment", 0}}),
+    #"Added Conditional Column" = Table.AddColumn(#"Replaced Errors", "Pre-Test Conditional", each if [#"Pre-Test"] >= 0.8 then "On-Track" else if [#"Pre-Test"] >= 0.6 then "Caution" else "At-Risk"),
+    #"Replaced Errors1" = Table.ReplaceErrorValues(#"Added Conditional Column", {{"Pre-Test Conditional", "Incomplete"}}),
+    #"Added Conditional Column1" = Table.AddColumn(#"Replaced Errors1", "January Assessment Conditional", each if [January Assessment] >= 0.8 then "On-Track" else if [January Assessment] >= 0.6 then "Caution" else "At-Risk"),
+    #"Replaced Errors2" = Table.ReplaceErrorValues(#"Added Conditional Column1", {{"January Assessment Conditional", "Incomplete"}}),
+    #"Added Custom" = Table.AddColumn(#"Replaced Errors2", "February Assessment Conditional", each if [February Assessment] >= 0.8 then "On-Track"
+  else if [February Assessment] >= 0.6 then "Caution"
+  else "At-Risk"),
+    #"Replaced Errors3" = Table.ReplaceErrorValues(#"Added Custom", {{"February Assessment Conditional", "Incomplete"}}),
+    #"Added Custom1" = Table.AddColumn(#"Replaced Errors3", "March Assessment Conditional", each if [March Assessment] >= 0.8 then "On-Track"
+  else if [March Assessment] >= 0.6 then "Caution"
+  else "At-Risk"),
+    #"Replaced Errors4" = Table.ReplaceErrorValues(#"Added Custom1", {{"March Assessment Conditional", "Incomplete"}}),
+    #"Added Custom2" = Table.AddColumn(#"Replaced Errors4", "April Assessment Conditional", each if [April Assessment] >= 0.8 then "On-Track"
+  else if [April Assessment] >= 0.6 then "Caution"
+  else "At-Risk"),
+    #"Replaced Errors5" = Table.ReplaceErrorValues(#"Added Custom2", {{"April Assessment Conditional", "Incomplete"}}),
+    #"Added Custom3" = Table.AddColumn(#"Replaced Errors5", "Post-Test Conditional", each if [#"Post-Test"] >= 0.8 then "On-Track"
+  else if [#"Post-Test"] >= 0.6 then "Caution"
+  else "At-Risk"),
+    #"Replaced Errors6" = Table.ReplaceErrorValues(#"Added Custom3", {{"Post-Test Conditional", "Incomplete"}}),
+    #"Added Custom4" = Table.AddColumn(#"Replaced Errors6", "Year", each 2026)
+in
+    #"Added Custom4"
+
+// === Table: School Rosters and Attendance ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric.sharepoint.com/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx"), null, true),
+    #"School Rosters and Attendance_Sheet" = Source{[Item="School Rosters and Attendance",Kind="Sheet"]}[Data],
+    #"Promoted Headers" = Table.PromoteHeaders(#"School Rosters and Attendance_Sheet", [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"PreApp School Rosters#(lf)Daily Attendance", type any}, {"Column2", type text}, {"Column3", type text}, {"Column4", type any}, {"Column5", type any}, {"Column6", type any}, {"Column7", type any}, {"Column8", type any}, {"Column9", type any}, {"Column10", type any}, {"Column11", type any}, {"Column12", type any}, {"Column13", type any}, {"Column14", type any}, {"Column15", type any}, {"Column16", type any}, {"Column17", type any}, {"Column18", type any}, {"Column19", type any}, {"Column20", type any}, {"Column21", type any}, {"Column22", type any}, {"Column23", type any}, {"Column24", type any}, {"Column25", type any}, {"Column26", type any}, {"Column27", type any}, {"Column28", type any}, {"Column29", type any}, {"Column30", type any}, {"Column31", type any}, {"Column32", type any}, {"Column33", type any}, {"Column34", type any}}),
+    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"Column31", "Column19", "Column20", "Column21", "Column22", "Column23", "Column24", "Column25", "Column26", "Column27", "Column28", "Column29", "Column30", "Column2", "Column3", "Column4", "Column5", "Column6", "Column7", "Column8", "Column9", "Column10", "Column11", "Column12", "Column13", "Column14", "Column15", "Column16", "Column17", "Column18"}),
+    #"Added Conditional Column" = Table.AddColumn(#"Removed Columns", "School Name", each if [Column32] = "STUDENT TOTALS BELOW" then [#"PreApp School Rosters#(lf)Daily Attendance"] else null),
+    #"Filled Down" = Table.FillDown(#"Added Conditional Column",{"School Name"}),
+    #"Filtered Rows" = Table.SelectRows(#"Filled Down", each ([#"PreApp School Rosters#(lf)Daily Attendance"] <> null and [#"PreApp School Rosters#(lf)Daily Attendance"] <> "First Name" and [#"PreApp School Rosters#(lf)Daily Attendance"] <> "Total Enrolled Students") and ([Column32] <> "SCHOOL TOTALS BELOW" and [Column32] <> "STUDENT TOTALS BELOW")),
+    #"Reordered Columns" = Table.ReorderColumns(#"Filtered Rows",{"School Name", "PreApp School Rosters#(lf)Daily Attendance", "Column32", "Column33", "Column34"}),
+    #"Renamed Columns" = Table.RenameColumns(#"Reordered Columns",{{"PreApp School Rosters#(lf)Daily Attendance", "Student Name"}, {"Column32", "Total Days Present"}, {"Column33", "Total Days Absent"}, {"Column34", "Total Days Excused"}}),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Renamed Columns",{{"Total Days Present", Int64.Type}, {"Total Days Absent", Int64.Type}, {"Total Days Excused", Int64.Type}, {"Student Name", type text}}),
+    #"Filtered Rows1" = Table.SelectRows(#"Changed Type1", each ([Student Name] <> "0" and [Student Name] <> "1" and [Student Name] <> "12" and [Student Name] <> "14" and [Student Name] <> "19" and [Student Name] <> "20" and [Student Name] <> "25" and [Student Name] <> "27" and [Student Name] <> "29" and [Student Name] <> "3" and [Student Name] <> "31" and [Student Name] <> "33" and [Student Name] <> "34" and [Student Name] <> "35" and [Student Name] <> "44" and [Student Name] <> "7"))
+in
+    #"Filtered Rows1"
+
+// === Table: Unpivot Data ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric.sharepoint.com/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx"), null, true),
+    #"FY 25-26 CURRENT DATA_Sheet" = Source{[Item="FY 25-26 CURRENT DATA",Kind="Sheet"]}[Data],
+    #"Changed Type" = Table.TransformColumnTypes(#"FY 25-26 CURRENT DATA_Sheet",{{"Column1", type any}, {"Column2", type text}, {"Column3", type text}, {"Column4", type text}, {"Column5", type text}, {"Column6", type any}, {"Column7", type any}, {"Column8", type any}, {"Column9", type text}, {"Column10", type text}, {"Column11", type any}, {"Column12", type text}, {"Column13", type text}, {"Column14", type text}, {"Column15", type text}, {"Column16", type text}, {"Column17", type text}, {"Column18", type text}, {"Column19", type text}, {"Column20", type text}, {"Column21", type any}, {"Column22", type text}, {"Column23", type text}, {"Column24", type text}, {"Column25", type text}, {"Column26", type text}, {"Column27", type text}, {"Column28", type any}, {"Column29", type any}, {"Column30", type any}, {"Column31", type any}, {"Column32", type any}, {"Column33", type any}, {"Column34", type any}, {"Column35", type text}, {"Column36", type text}, {"Column37", type text}, {"Column38", type text}, {"Column39", type text}, {"Column40", type text}, {"Column41", type text}, {"Column42", type text}, {"Column43", type text}, {"Column44", type text}, {"Column45", type text}, {"Column46", type text}, {"Column47", type text}, {"Column48", type text}, {"Column49", type text}, {"Column50", type text}, {"Column51", type text}, {"Column52", type text}, {"Column53", type text}, {"Column54", type text}, {"Column55", type text}, {"Column56", type text}, {"Column57", type text}, {"Column58", type text}, {"Column59", type text}, {"Column60", type text}, {"Column61", type text}, {"Column62", type text}, {"Column63", type text}, {"Column64", type text}, {"Column65", type text}, {"Column66", type text}, {"Column67", type text}}),
+    #"Removed Top Rows" = Table.Skip(#"Changed Type",2),
+    #"Removed Bottom Rows" = Table.RemoveLastN(#"Removed Top Rows",23),
+    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Bottom Rows", [PromoteAllScalars=true]),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"Student#(lf)First Name", type any}, {"Student#(lf)Last Name", type text}, {"Student Current Status", type text}, {"Withdraw Date", type date}, {"High School", type text}, {"School ID#", type any}, {"Birthdate", type date}, {"Age at Enrollment", Int64.Type}, {"Address", type text}, {"City", type text}, {"Zip Code", type text}, {"Household Occupants", type text}, {"Household Income", type text}, {"Household Arrangement", type text}, {"Last 4 of SSN", type text}, {"Gender", type text}, {"Race", type text}, {"Ethnicity", type text}, {"Cultural Influence", type text}, {"Language at Home", type text}, {"Phone Number", type text}, {"Email", type text}, {"Onboard Complete#(lf)(i.e. All Platforms, All State Docs)", type text}, {"Soft Skills Curriculum Completed", type text}, {"Badge Credentials Completed", type text}, {"ABCI Workshops Completed", type text}, {"Interplay Learning", type text}, {"Pre-Test", type number}, {"January Assessment", type number}, {"February Assessment", type number}, {"March Assessment", type number}, {"April Assessment", type number}, {"Post-Test", type number}, {"Knowledge Gained %", type number}, {"Employment Folder#(lf)(i.e. SSC, ID, Resume, LinkedIn acct)", type text}, {"Industry Certifications (3)#(lf)(i.e. OSHA, CPR, Forklift, etc.)", type text}, {"Networking and #(lf)Mock Interviews#(lf)(3 successful)", type text}, {"Interest Survey Results:#(lf)Occupation for FLDOE#(lf)(Pre-Apprenticeship ID# Request)", type text}, {"FLDOE #(lf)Pre-Apprenticeship ID#s", type text}, {"State Registration Form Completed", type text}, {"Occupation Declared to FLDOE", type text}, {"InPlace Account", type text}, {"January #(lf)CM Note#(lf)(Date)", type text}, {"Satisfaction Survey:#(lf)January", type text}, {"February#(lf)CM Note#(lf)(Date)", type text}, {"Satisfaction Survey:#(lf)February", type text}, {"March#(lf)CM Note#(lf)(Date)", type text}, {"Satisfaction Survey:#(lf)March", type text}, {"April#(lf)CM Note#(lf)(Date)", type text}, {"Satisfaction Survey:#(lf)April", type text}, {"May #(lf)CM Note#(lf)(Date)", type text}, {"Satisfaction Survey:#(lf)May", type text}, {"June #(lf)CM Note#(lf)(Date)", type text}, {"Satisfaction Survey:#(lf)June", type text}, {"Ready for Placement", type text}, {"JAESI Completed#(lf)(Plan Uploaded)", type text}, {"Graduate Placement Tier System", type text}, {"Assigned Employment Specialist", type text}, {"Placement#(lf)Y/N?", type text}, {"Employment Location#(lf)(Address)", type text}, {"Employment Hire Date#(lf)(Employment Verfication Uploaded)", type text}, {"Employment Follow-Up#(lf)30-Day", type text}, {"30-Day Compliance#(lf)Y/N?", type text}, {"Employment Follow-Up#(lf)60-Day", type text}, {"60-Day Compliance#(lf)Y/N?", type text}, {"Employment Follow-Up#(lf)90-Day", type text}, {"90-Day Compliance#(lf)Y/N?", type text}}),
+    #"Replaced Errors" = Table.ReplaceErrorValues(#"Changed Type1", {{"Age at Enrollment", 0}}),
+    #"Added Conditional Column" = Table.AddColumn(#"Replaced Errors", "Pre-Test Conditional", each if [#"Pre-Test"] >= 0.8 then "On-Track" else if [#"Pre-Test"] >= 0.6 then "Caution" else "At-Risk"),
+    #"Replaced Errors1" = Table.ReplaceErrorValues(#"Added Conditional Column", {{"Pre-Test Conditional", "Incomplete"}}),
+    #"Added Conditional Column1" = Table.AddColumn(#"Replaced Errors1", "January Assessment Conditional", each if [January Assessment] >= 0.8 then "On-Track" else if [January Assessment] >= 0.6 then "Caution" else "At-Risk"),
+    #"Replaced Errors2" = Table.ReplaceErrorValues(#"Added Conditional Column1", {{"January Assessment Conditional", "Incomplete"}}),
+    #"Added Custom" = Table.AddColumn(#"Replaced Errors2", "February Assessment Conditional", each if [February Assessment] >= 0.8 then "On-Track"
+  else if [February Assessment] >= 0.6 then "Caution"
+  else "At-Risk"),
+    #"Replaced Errors3" = Table.ReplaceErrorValues(#"Added Custom", {{"February Assessment Conditional", "Incomplete"}}),
+    #"Added Custom1" = Table.AddColumn(#"Replaced Errors3", "March Assessment Conditional", each if [March Assessment] >= 0.8 then "On-Track"
+  else if [March Assessment] >= 0.6 then "Caution"
+  else "At-Risk"),
+    #"Replaced Errors4" = Table.ReplaceErrorValues(#"Added Custom1", {{"March Assessment Conditional", "Incomplete"}}),
+    #"Added Custom2" = Table.AddColumn(#"Replaced Errors4", "April Assessment Conditional", each if [April Assessment] >= 0.8 then "On-Track"
+  else if [April Assessment] >= 0.6 then "Caution"
+  else "At-Risk"),
+    #"Replaced Errors5" = Table.ReplaceErrorValues(#"Added Custom2", {{"April Assessment Conditional", "Incomplete"}}),
+    #"Added Custom3" = Table.AddColumn(#"Replaced Errors5", "Post-Test Conditional", each if [#"Post-Test"] >= 0.8 then "On-Track"
+  else if [#"Post-Test"] >= 0.6 then "Caution"
+  else "At-Risk"),
+    #"Replaced Errors6" = Table.ReplaceErrorValues(#"Added Custom3", {{"Post-Test Conditional", "Incomplete"}}),
+    #"Unpivoted Only Selected Columns" = Table.Unpivot(#"Replaced Errors6", {"Pre-Test Conditional", "January Assessment Conditional", "February Assessment Conditional", "March Assessment Conditional", "April Assessment Conditional", "Post-Test Conditional"}, "Attribute", "Value"),
+    #"Renamed Columns" = Table.RenameColumns(#"Unpivoted Only Selected Columns",{{"Attribute", "Assessment Period"}, {"Value", "Status"}}),
+    #"Replaced Value" = Table.ReplaceValue(#"Renamed Columns","Pre-Test Conditional","Pre-Test",Replacer.ReplaceText,{"Assessment Period"}),
+    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","January Assessment Conditional","January",Replacer.ReplaceText,{"Assessment Period"}),
+    #"Replaced Value2" = Table.ReplaceValue(#"Replaced Value1","February Assessment Conditional","February",Replacer.ReplaceText,{"Assessment Period"}),
+    #"Replaced Value3" = Table.ReplaceValue(#"Replaced Value2","March Assessment Conditional","March",Replacer.ReplaceText,{"Assessment Period"}),
+    #"Replaced Value4" = Table.ReplaceValue(#"Replaced Value3","April Assessment Conditional","April",Replacer.ReplaceText,{"Assessment Period"}),
+    #"Replaced Value5" = Table.ReplaceValue(#"Replaced Value4","Post-Test Conditional","Post-Test",Replacer.ReplaceText,{"Assessment Period"}),
+    #"Added Custom4" = Table.AddColumn(#"Replaced Value5", "Custom Order", each if [Assessment Period] = "Pre-Test" then 1
+  else if [Assessment Period] = "January" then 2
+  else if [Assessment Period] = "February" then 3
+  else if [Assessment Period] = "March" then 4
+  else if [Assessment Period] = "April" then 5
+  else if [Assessment Period] = "Post-Test" then 6
+  else 99)
+in
+    #"Added Custom4"
+
+// === Table: Table 1 (DASHBOARD) ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric.sharepoint.com/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx"), null, false),
+    DASHBOARD_sheet = Source{[Item="DASHBOARD",Kind="Sheet"]}[Data],
+    FilterNullAndWhitespace = each List.Select(_, each _ <> null and (not (_ is text) or Text.Trim(_) <> "")),
+    #"Added Custom" = Table.AddColumn(DASHBOARD_sheet, "IsEmptyRow", each try List.IsEmpty(FilterNullAndWhitespace(Record.FieldValues(_))) otherwise false),
+    #"Added Index" = Table.AddIndexColumn(#"Added Custom", "Index", -1),
+    #"Added Custom1" = Table.AddColumn(#"Added Index", "Section", each if [IsEmptyRow] then -1 else if try #"Added Index"[IsEmptyRow]{[Index]} otherwise true then [Index] else null),
+    #"Removed Blank Rows" = Table.SelectRows(#"Added Custom1", each not [IsEmptyRow]),
+    #"Filled Down" = Table.FillDown(#"Removed Blank Rows", {"Section"}),
+    #"Grouped Rows" = Table.Group(#"Filled Down", {"Section"}, {{"Rows", each _}}, GroupKind.Local),
+    #"Selected Group" = #"Grouped Rows"[Rows]{1},
+    #"Removed Columns" = Table.RemoveColumns(#"Selected Group", {"IsEmptyRow", "Index", "Section"}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Removed Columns", List.Select(Table.ColumnNames(#"Removed Columns"), each try not List.IsEmpty(FilterNullAndWhitespace(Table.Column(#"Removed Columns", _))) otherwise true)),
+    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Other Columns", [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Month", type text}, {"Original Enrollment", Int64.Type}, {"Active Enrollment", Int64.Type}}),
+    #"Added Custom2" = Table.AddColumn(#"Changed Type", "Custom Order", each if [Month] = "January" then 2 else if [Month] = "February" then 3 else if [Month] = "March" then 4 else if [Month] = "April" then 5 else if [Month] = "May" then 6 else if [Month] = "June" then 7 else if [Month] = "Enrollment" then 1 else 99)
+in
+    #"Added Custom2"
+
+// === Table: Table 2 (DASHBOARD) ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric.sharepoint.com/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx"), null, false),
+    DASHBOARD_sheet = Source{[Item="DASHBOARD",Kind="Sheet"]}[Data],
+    FilterNullAndWhitespace = each List.Select(_, each _ <> null and (not (_ is text) or Text.Trim(_) <> "")),
+    #"Added Custom" = Table.AddColumn(DASHBOARD_sheet, "IsEmptyRow", each try List.IsEmpty(FilterNullAndWhitespace(Record.FieldValues(_))) otherwise false),
+    #"Added Index" = Table.AddIndexColumn(#"Added Custom", "Index", -1),
+    #"Added Custom1" = Table.AddColumn(#"Added Index", "Section", each if [IsEmptyRow] then -1 else if try #"Added Index"[IsEmptyRow]{[Index]} otherwise true then [Index] else null),
+    #"Removed Blank Rows" = Table.SelectRows(#"Added Custom1", each not [IsEmptyRow]),
+    #"Filled Down" = Table.FillDown(#"Removed Blank Rows", {"Section"}),
+    #"Grouped Rows" = Table.Group(#"Filled Down", {"Section"}, {{"Rows", each _}}, GroupKind.Local),
+    #"Selected Group" = #"Grouped Rows"[Rows]{2},
+    #"Removed Columns" = Table.RemoveColumns(#"Selected Group", {"IsEmptyRow", "Index", "Section"}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Removed Columns", List.Select(Table.ColumnNames(#"Removed Columns"), each try not List.IsEmpty(FilterNullAndWhitespace(Table.Column(#"Removed Columns", _))) otherwise true)),
+    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Other Columns", [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Month", type text}, {"Incomplete", Int64.Type}, {"On-Track", Int64.Type}, {"Caution", Int64.Type}, {"At-Risk", Int64.Type}}),
+    #"Added Custom2" = Table.AddColumn(#"Changed Type", "Custom Order", each if [Month] = "Pre-Test" then 1
+  else if [Month] = "January" then 2
+  else if [Month] = "February" then 3
+  else if [Month] = "March" then 4
+  else if [Month] = "April" then 5
+  else if [Month] = "Post-Test" then 6
+  else 99)
+in
+    #"Added Custom2"
+
+// === Table: Table 3 (DASHBOARD) ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric.sharepoint.com/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx"), null, false),
+    DASHBOARD_sheet = Source{[Item="DASHBOARD",Kind="Sheet"]}[Data],
+    FilterNullAndWhitespace = each List.Select(_, each _ <> null and (not (_ is text) or Text.Trim(_) <> "")),
+    #"Added Custom" = Table.AddColumn(DASHBOARD_sheet, "IsEmptyRow", each try List.IsEmpty(FilterNullAndWhitespace(Record.FieldValues(_))) otherwise false),
+    #"Added Index" = Table.AddIndexColumn(#"Added Custom", "Index", -1),
+    #"Added Custom1" = Table.AddColumn(#"Added Index", "Section", each if [IsEmptyRow] then -1 else if try #"Added Index"[IsEmptyRow]{[Index]} otherwise true then [Index] else null),
+    #"Removed Blank Rows" = Table.SelectRows(#"Added Custom1", each not [IsEmptyRow]),
+    #"Filled Down" = Table.FillDown(#"Removed Blank Rows", {"Section"}),
+    #"Grouped Rows" = Table.Group(#"Filled Down", {"Section"}, {{"Rows", each _}}, GroupKind.Local),
+    #"Selected Group" = #"Grouped Rows"[Rows]{3},
+    #"Removed Columns" = Table.RemoveColumns(#"Selected Group", {"IsEmptyRow", "Index", "Section"}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Removed Columns", List.Select(Table.ColumnNames(#"Removed Columns"), each try not List.IsEmpty(FilterNullAndWhitespace(Table.Column(#"Removed Columns", _))) otherwise true)),
+    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Other Columns", [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Month", type text}, {"Current Enrollment", Int64.Type}, {"Completed", Int64.Type}, {"Late", Int64.Type}}),
+    #"Added Custom2" = Table.AddColumn(#"Changed Type", "Custom", each if [Month] = "InPlace Acct Created" then 1
+  else if [Month] = "January CM" then 2
+  else if [Month] = "February CM" then 3
+  else if [Month] = "March CM" then 4
+  else if [Month] = "April CM" then 5
+  else if [Month] = "May CM" then 6
+  else if [Month] = "June CM" then 7
+  else 99)
+in
+    #"Added Custom2"
+
+// === Table: Table 4 (DASHBOARD) ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric.sharepoint.com/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx"), null, false),
+    DASHBOARD_sheet = Source{[Item="DASHBOARD",Kind="Sheet"]}[Data],
+    FilterNullAndWhitespace = each List.Select(_, each _ <> null and (not (_ is text) or Text.Trim(_) <> "")),
+    #"Added Custom" = Table.AddColumn(DASHBOARD_sheet, "IsEmptyRow", each try List.IsEmpty(FilterNullAndWhitespace(Record.FieldValues(_))) otherwise false),
+    #"Added Index" = Table.AddIndexColumn(#"Added Custom", "Index", -1),
+    #"Added Custom1" = Table.AddColumn(#"Added Index", "Section", each if [IsEmptyRow] then -1 else if try #"Added Index"[IsEmptyRow]{[Index]} otherwise true then [Index] else null),
+    #"Removed Blank Rows" = Table.SelectRows(#"Added Custom1", each not [IsEmptyRow]),
+    #"Filled Down" = Table.FillDown(#"Removed Blank Rows", {"Section"}),
+    #"Grouped Rows" = Table.Group(#"Filled Down", {"Section"}, {{"Rows", each _}}, GroupKind.Local),
+    #"Selected Group" = #"Grouped Rows"[Rows]{5},
+    #"Removed Columns" = Table.RemoveColumns(#"Selected Group", {"IsEmptyRow", "Index", "Section"}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Removed Columns", List.Select(Table.ColumnNames(#"Removed Columns"), each try not List.IsEmpty(FilterNullAndWhitespace(Table.Column(#"Removed Columns", _))) otherwise true)),
+    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Other Columns", [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Occupation", type text}, {"Interest", Int64.Type}})
+in
+    #"Changed Type"
+
+// === Table: Table 5 (DASHBOARD) ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric.sharepoint.com/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx"), null, false),
+    DASHBOARD_sheet = Source{[Item="DASHBOARD",Kind="Sheet"]}[Data],
+    FilterNullAndWhitespace = each List.Select(_, each _ <> null and (not (_ is text) or Text.Trim(_) <> "")),
+    #"Added Custom" = Table.AddColumn(DASHBOARD_sheet, "IsEmptyRow", each try List.IsEmpty(FilterNullAndWhitespace(Record.FieldValues(_))) otherwise false),
+    #"Added Index" = Table.AddIndexColumn(#"Added Custom", "Index", -1),
+    #"Added Custom1" = Table.AddColumn(#"Added Index", "Section", each if [IsEmptyRow] then -1 else if try #"Added Index"[IsEmptyRow]{[Index]} otherwise true then [Index] else null),
+    #"Removed Blank Rows" = Table.SelectRows(#"Added Custom1", each not [IsEmptyRow]),
+    #"Filled Down" = Table.FillDown(#"Removed Blank Rows", {"Section"}),
+    #"Grouped Rows" = Table.Group(#"Filled Down", {"Section"}, {{"Rows", each _}}, GroupKind.Local),
+    #"Selected Group" = #"Grouped Rows"[Rows]{6},
+    #"Removed Columns" = Table.RemoveColumns(#"Selected Group", {"IsEmptyRow", "Index", "Section"}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Removed Columns", List.Select(Table.ColumnNames(#"Removed Columns"), each try not List.IsEmpty(FilterNullAndWhitespace(Table.Column(#"Removed Columns", _))) otherwise true)),
+    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Other Columns", [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Occupation", type text}, {"Declared", Int64.Type}})
+in
+    #"Changed Type"
+
+// === Table: Table 6 (DASHBOARD) ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric.sharepoint.com/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx"), null, false),
+    DASHBOARD_sheet = Source{[Item="DASHBOARD",Kind="Sheet"]}[Data],
+    FilterNullAndWhitespace = each List.Select(_, each _ <> null and (not (_ is text) or Text.Trim(_) <> "")),
+    #"Added Custom" = Table.AddColumn(DASHBOARD_sheet, "IsEmptyRow", each try List.IsEmpty(FilterNullAndWhitespace(Record.FieldValues(_))) otherwise false),
+    #"Added Index" = Table.AddIndexColumn(#"Added Custom", "Index", -1),
+    #"Added Custom1" = Table.AddColumn(#"Added Index", "Section", each if [IsEmptyRow] then -1 else if try #"Added Index"[IsEmptyRow]{[Index]} otherwise true then [Index] else null),
+    #"Removed Blank Rows" = Table.SelectRows(#"Added Custom1", each not [IsEmptyRow]),
+    #"Filled Down" = Table.FillDown(#"Removed Blank Rows", {"Section"}),
+    #"Grouped Rows" = Table.Group(#"Filled Down", {"Section"}, {{"Rows", each _}}, GroupKind.Local),
+    #"Selected Group" = #"Grouped Rows"[Rows]{7},
+    #"Removed Columns" = Table.RemoveColumns(#"Selected Group", {"IsEmptyRow", "Index", "Section"}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Removed Columns", List.Select(Table.ColumnNames(#"Removed Columns"), each try not List.IsEmpty(FilterNullAndWhitespace(Table.Column(#"Removed Columns", _))) otherwise true)),
+    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Other Columns", [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Occupation", type text}, {"Tier 1", Int64.Type}, {"Tier 2", Int64.Type}, {"Tier 3", Int64.Type}, {"Tier 4", Int64.Type}, {"Tier 5", Int64.Type}, {"CSC Approved", Int64.Type}})
+in
+    #"Changed Type"
+
+// === Table: Table 7 (DASHBOARD) ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric.sharepoint.com/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx"), null, false),
+    DASHBOARD_sheet = Source{[Item="DASHBOARD",Kind="Sheet"]}[Data],
+    FilterNullAndWhitespace = each List.Select(_, each _ <> null and (not (_ is text) or Text.Trim(_) <> "")),
+    #"Added Custom" = Table.AddColumn(DASHBOARD_sheet, "IsEmptyRow", each try List.IsEmpty(FilterNullAndWhitespace(Record.FieldValues(_))) otherwise false),
+    #"Added Index" = Table.AddIndexColumn(#"Added Custom", "Index", -1),
+    #"Added Custom1" = Table.AddColumn(#"Added Index", "Section", each if [IsEmptyRow] then -1 else if try #"Added Index"[IsEmptyRow]{[Index]} otherwise true then [Index] else null),
+    #"Removed Blank Rows" = Table.SelectRows(#"Added Custom1", each not [IsEmptyRow]),
+    #"Filled Down" = Table.FillDown(#"Removed Blank Rows", {"Section"}),
+    #"Grouped Rows" = Table.Group(#"Filled Down", {"Section"}, {{"Rows", each _}}, GroupKind.Local),
+    #"Selected Group" = #"Grouped Rows"[Rows]{8},
+    #"Removed Columns" = Table.RemoveColumns(#"Selected Group", {"IsEmptyRow", "Index", "Section"}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Removed Columns", List.Select(Table.ColumnNames(#"Removed Columns"), each try not List.IsEmpty(FilterNullAndWhitespace(Table.Column(#"Removed Columns", _))) otherwise true)),
+    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Other Columns", [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"School", type text}, {"Present", Int64.Type}, {"Absent", Int64.Type}, {"Excused", Int64.Type}, {"Total", Int64.Type}, {"Present_1", type number}, {"Absent_2", type number}, {"Excused_3", type number}})
+in
+    #"Changed Type"
+
+// === Table: Table 8 (DASHBOARD) ===
+let
+    Source = Excel.Workbook(Web.Contents("https://centuric.sharepoint.com/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx"), null, false),
+    DASHBOARD_sheet = Source{[Item="DASHBOARD",Kind="Sheet"]}[Data],
+    FilterNullAndWhitespace = each List.Select(_, each _ <> null and (not (_ is text) or Text.Trim(_) <> "")),
+    #"Added Custom" = Table.AddColumn(DASHBOARD_sheet, "IsEmptyRow", each try List.IsEmpty(FilterNullAndWhitespace(Record.FieldValues(_))) otherwise false),
+    #"Added Index" = Table.AddIndexColumn(#"Added Custom", "Index", -1),
+    #"Added Custom1" = Table.AddColumn(#"Added Index", "Section", each if [IsEmptyRow] then -1 else if try #"Added Index"[IsEmptyRow]{[Index]} otherwise true then [Index] else null),
+    #"Removed Blank Rows" = Table.SelectRows(#"Added Custom1", each not [IsEmptyRow]),
+    #"Filled Down" = Table.FillDown(#"Removed Blank Rows", {"Section"}),
+    #"Grouped Rows" = Table.Group(#"Filled Down", {"Section"}, {{"Rows", each _}}, GroupKind.Local),
+    #"Selected Group" = #"Grouped Rows"[Rows]{9},
+    #"Removed Columns" = Table.RemoveColumns(#"Selected Group", {"IsEmptyRow", "Index", "Section"}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Removed Columns", List.Select(Table.ColumnNames(#"Removed Columns"), each try not List.IsEmpty(FilterNullAndWhitespace(Table.Column(#"Removed Columns", _))) otherwise true)),
+    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Other Columns", [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Knowledge Gained", type text}, {"Tests Results", Int64.Type}})
+in
+    #"Changed Type"
+
+// === Table: Stages ===
+let
+    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("Hc27DsIwDEDRX7E8d+E9Q8TQCUQHhihDIa5AdePKCUP/ntTrucP1Hq9JhZkiNrjB0Hi8pZf0Gk22Jp0MBbrxy5zByTQzFapxZ/F8cS08Rcf8kTlX3hu3Kf5y0QUcaVn5YPyICwyicOf+TROlUsvRisn6PGEIfw==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Stage = _t, StageOrder = _t]),
+    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Stage", type text}, {"StageOrder", Int64.Type}})
+in
+    #"Changed Type"
+
+// === Table: Target_KPIs ===
+let
+    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("bc5NCsIwEAXgq4Ssi9So1QuULsRNuyxdhGawgTQjcaL29o4BfwKuMjy+mby+l6pUlSxkF8MNFh62cig+6dHj3YE5g2i09WA4Klfr3S9pgjZRk0UvWk2QRJWJFsYQLYmOogFPV442qvwrxgnRvUD+x3tT1D6gc6mHOmQn6vnicJlZiRaIHy6UuuSssw9xQk+T+C4ktmc2PAE=", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Year = _t, KPI_Type = _t, Target = _t]),
+    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Year", type date}, {"KPI_Type", type text}, {"Target", type number}})
+in
+    #"Changed Type"
+
+// === Table: Expense Log ===
+let
+    FileBinary = Binary.Buffer(Web.Contents("https://centuric.sharepoint.com/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx")),
+    Source = Excel.Workbook(FileBinary, null, true),
+    ExpenseLog_Table = Source{[Item="Table1",Kind="Table"]}[Data],
+    #"Changed Type" = Table.TransformColumnTypes(ExpenseLog_Table,{{"Date", type date}, {"Description", type text}, {"Amount", type number}, {"Payment Method", type text}, {"Month", type text}, {"Funder", type text}}),
+    #"Removed Blank Rows" = Table.SelectRows(#"Changed Type", each not List.IsEmpty(List.RemoveMatchingItems(Record.FieldValues(_), {"", null}))),
+    #"Removed Columns" = Table.RemoveColumns(#"Removed Blank Rows",{"Link to Receipt/Invoice"}),
+    #"Added Index" = Table.AddIndexColumn(#"Removed Columns", "Index", 1, 1, Int64.Type),
+    #"Reordered Columns" = Table.ReorderColumns(#"Added Index",{"Index", "Date", "Vendor", "GL Acct #", "Description", "Amount", "Payment Method", "Month", "Funder"})
+in
+    #"Reordered Columns"
+
+// === Table: Budget_Tracker_Normalized ===
+let
+    FileBinary = Binary.Buffer(Web.Contents("https://centuric.sharepoint.com/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx")),
+    Source = Excel.Workbook(FileBinary, null, true),
+    BudgetTracker_Sheet = Source{[Item="Budget Tracker",Kind="Sheet"]}[Data],
+    
+    // STEP 2: Promote row 2 as headers
+    #"Removed Top Rows" = Table.Skip(BudgetTracker_Sheet,1),
+    #"Promoted Headers" = Table.PromoteHeaders(#"Removed Top Rows", [PromoteAllScalars=true]),
+    
+    // STEP 3: First, let's rename the non-duplicate columns
+    #"Renamed Columns1" = Table.RenameColumns(#"Promoted Headers",{
+        {"Acct", "Account_Number"},
+        {"Description", "Account_Description"},
+        {"Pre-Apprenticeship Budget Notes#(lf)FY 25-26", "Budget_Notes"},
+        {"Pre-Apprenticeship Budget#(lf)FY 25-26", "Budget_Total"},
+        {"Kingdom Charitable#(lf)Oct 31 FY", "Budget_Kingdom_Charitable"},
+        {"COMCAST Telecommunications#(lf)& Broadband Expansion Grant", "Budget_COMCAST"},
+        {"Sts. MM&M", "Budget_Sts_MMM"},
+        {"Budget Variance", "Budget_Variance"},
+        {"Actuals YTD", "YTD_Actuals"},
+        {"Budget Remaining", "Budget_Remaining"},
+        {"Contingency 2024-25#(lf)(10% Budget Reduction)", "Contingency"},
+        {"Contengency Comments", "Contingency_Comments"},
+        {"PCOG", "Actual_PCOG"},
+        {"Kingdom Charitable Trust", "Actual_Kingdom_Charitable"},
+        {"COMCAST", "Actual_COMCAST"},
+        {"Mandalblatt", "Actual_Mandalblatt"},
+        {"Bachelor Grant", "Actual_Bachelor_Grant"},
+        {"Children's Services Council", "Actual_CSC"},
+        {"Actual Notes", "Actual_Notes"}
+    }),
+    
+    // STEP 4: Get column names to find the duplicate ones
+    ColumnNames = Table.ColumnNames(#"Renamed Columns1"),
+    
+    // STEP 5: Find and rename the City of Hollywood columns (first occurrence already exists, find the second)
+    CityHollywoodCol1 = "City of Hollywood#(lf)(Local Gov't)",
+    // The second occurrence will have a suffix - find it
+    CityHollywoodCol2 = List.First(List.Select(ColumnNames, each Text.Contains(_, "City of Hollywood") and _ <> CityHollywoodCol1)),
+    
+    // STEP 6: Find and rename the Broward County columns
+    BrowardCol1 = "Broward County#(lf)OESBD#(lf)(Local Gov't)",
+    BrowardCol2 = List.First(List.Select(ColumnNames, each Text.Contains(_, "Broward County") and Text.Contains(_, "OESBD") and _ <> BrowardCol1)),
+    
+    // STEP 7: Now rename the duplicate columns using the actual names Power Query assigned
+    #"Renamed Columns2" = Table.RenameColumns(#"Renamed Columns1",{
+        {CityHollywoodCol1, "Budget_City_Hollywood"},
+        {CityHollywoodCol2, "Actual_City_Hollywood"},
+        {BrowardCol1, "Budget_Broward_County"},
+        {BrowardCol2, "Actual_Broward_County"}
+    }),
+    
+    // STEP 8: Change data types
+    #"Changed Types" = Table.TransformColumnTypes(#"Renamed Columns2",{
+        {"Account_Number", type text},
+        {"Account_Description", type text},
+        {"Budget_Total", type number},
+        {"Budget_Kingdom_Charitable", type number},
+        {"Budget_COMCAST", type number},
+        {"Budget_Sts_MMM", type number},
+        {"Budget_City_Hollywood", type number},
+        {"Budget_Broward_County", type number},
+        {"Budget_Variance", type number},
+        {"YTD_Actuals", type number},
+        {"Budget_Remaining", type number},
+        {"July", type number},
+        {"August", type number},
+        {"September", type number},
+        {"October", type number},
+        {"November", type number},
+        {"December", type number},
+        {"January", type number},
+        {"February", type number},
+        {"March", type number},
+        {"April", type number},
+        {"May", type number},
+        {"June", type number},
+        {"Actual_PCOG", type number},
+        {"Actual_Kingdom_Charitable", type number},
+        {"Actual_COMCAST", type number},
+        {"Actual_Mandalblatt", type number},
+        {"Actual_Bachelor_Grant", type number},
+        {"Actual_City_Hollywood", type number},
+        {"Actual_CSC", type number},
+        {"Actual_Broward_County", type number}
+    }),
+    
+    // STEP 9: Filter out subtotal and blank rows
+    #"Filtered Rows" = Table.SelectRows(#"Changed Types", each 
+        [Account_Number] <> null and 
+        [Account_Number] <> "" and
+        [Account_Description] <> "REVENUE SUBTOTALS" and
+        [Account_Description] <> "IN KIND SUBTOTALS" and
+        [Account_Description] <> "TOTAL REVENUES" and
+        [Account_Description] <> "SALARY & FRINGE BENEFITS SUBTOTALS" and
+        [Account_Description] <> "EXPENSE SUBTOTALS" and
+        [Account_Description] <> "NON OPERATING SUBTOTALS" and
+        [Account_Description] <> "TOTAL EXPENSES" and
+        [Account_Description] <> "NET (w/o GIK)"
+    ),
+    
+    // STEP 10: Add Category column
+    #"Added Category" = Table.AddColumn(#"Filtered Rows", "Category", each 
+        if Number.From([Account_Number]) >= 4000 and Number.From([Account_Number]) < 5000 then "REVENUE"
+        else if Number.From([Account_Number]) >= 5000 and Number.From([Account_Number]) < 7000 then "EXPENSE"
+        else if Number.From([Account_Number]) >= 8000 and Number.From([Account_Number]) < 9000 then "IN-KIND EXPENSE"
+        else if Number.From([Account_Number]) >= 9000 then "NON-OPERATING EXPENSE"
+        else "OTHER"
+    ),
+    
+    // STEP 11: Add Subcategory column
+    #"Added Subcategory" = Table.AddColumn(#"Added Category", "Subcategory", each 
+        if [Category] = "REVENUE" then
+            if Number.From([Account_Number]) >= 4600 then "In-Kind Revenue"
+            else "Operating Revenue"
+        else if [Category] = "EXPENSE" then
+            if Number.From([Account_Number]) >= 5000 and Number.From([Account_Number]) < 5500 then "Salaries & Benefits"
+            else if Number.From([Account_Number]) >= 5500 and Number.From([Account_Number]) < 6000 then "Program Operations"
+            else "Other Operating Expenses"
+        else if [Category] = "IN-KIND EXPENSE" then "In-Kind"
+        else if [Category] = "NON-OPERATING EXPENSE" then "Non-Operating"
+        else "Other"
+    ),
+    
+    // STEP 12: Calculate Total Funding Source Budget
+    #"Added Total_Funding_Budget" = Table.AddColumn(#"Added Subcategory", "Total_Funding_Budget", each 
+        List.Sum({
+            [Budget_Kingdom_Charitable],
+            [Budget_COMCAST],
+            [Budget_Sts_MMM],
+            [Budget_City_Hollywood],
+            [Budget_Broward_County]
+        })
+    ),
+    
+    // STEP 13: Select and reorder columns (keeping funding sources)
+    #"Selected Columns" = Table.SelectColumns(#"Added Total_Funding_Budget",{
+        "Account_Number", 
+        "Account_Description", 
+        "Category", 
+        "Subcategory", 
+        "Budget_Total",
+        "Total_Funding_Budget",
+        "Budget_Variance",
+        "Budget_Kingdom_Charitable",
+        "Budget_COMCAST",
+        "Budget_Sts_MMM",
+        "Budget_City_Hollywood",
+        "Budget_Broward_County",
+        "July", "August", "September", "October", "November", "December",
+        "January", "February", "March", "April", "May", "June",
+        "Actual_PCOG",
+        "Actual_Kingdom_Charitable",
+        "Actual_COMCAST",
+        "Actual_Mandalblatt",
+        "Actual_Bachelor_Grant",
+        "Actual_City_Hollywood",
+        "Actual_CSC",
+        "Actual_Broward_County",
+        "YTD_Actuals",
+        "Budget_Remaining",
+        "Budget_Notes",
+        "Actual_Notes"
+    }),
+
+    // STEP 14: REPLACE NULLS WITH 0 IN MONTH COLUMNS
+    #"Replaced Nulls Pre-Unpivot" = Table.ReplaceValue(
+        #"Selected Columns",
+        null,
+        0,
+        Replacer.ReplaceValue,
+        {"July", "August", "September", "October", "November", "December", 
+         "January", "February", "March", "April", "May", "June",
+         "Actual_PCOG", "Actual_Kingdom_Charitable", "Actual_COMCAST", 
+         "Actual_Mandalblatt", "Actual_Bachelor_Grant", "Actual_City_Hollywood", 
+         "Actual_CSC", "Actual_Broward_County"}
+    ),
+
+    // STEP 15: UNPIVOT MONTHS
+    #"Unpivoted Months" = Table.Unpivot(
+        #"Replaced Nulls Pre-Unpivot", 
+        {"July", "August", "September", "October", "November", "December", 
+         "January", "February", "March", "April", "May", "June"},
+        "Month_Name", 
+        "Monthly_Actual"
+    ),
+    
+    // STEP 16: Create proper date column
+    #"Added Month_Date" = Table.AddColumn(#"Unpivoted Months", "Month", each 
+        if [Month_Name] = "July" then #date(2025, 7, 1)
+        else if [Month_Name] = "August" then #date(2025, 8, 1)
+        else if [Month_Name] = "September" then #date(2025, 9, 1)
+        else if [Month_Name] = "October" then #date(2025, 10, 1)
+        else if [Month_Name] = "November" then #date(2025, 11, 1)
+        else if [Month_Name] = "December" then #date(2025, 12, 1)
+        else if [Month_Name] = "January" then #date(2026, 1, 1)
+        else if [Month_Name] = "February" then #date(2026, 2, 1)
+        else if [Month_Name] = "March" then #date(2026, 3, 1)
+        else if [Month_Name] = "April" then #date(2026, 4, 1)
+        else if [Month_Name] = "May" then #date(2026, 5, 1)
+        else if [Month_Name] = "June" then #date(2026, 6, 1)
+        else null, 
+        type date
+    ),
+    
+    // STEP 17: Add fiscal year and quarter
+    #"Added Fiscal Year" = Table.AddColumn(#"Added Month_Date", "Fiscal_Year", each "FY 25-26", type text),
+    
+    #"Added Quarter" = Table.AddColumn(#"Added Fiscal Year", "Quarter", each 
+        if [Month_Name] = "July" or [Month_Name] = "August" or [Month_Name] = "September" then "Q1"
+        else if [Month_Name] = "October" or [Month_Name] = "November" or [Month_Name] = "December" then "Q2"
+        else if [Month_Name] = "January" or [Month_Name] = "February" or [Month_Name] = "March" then "Q3"
+        else "Q4"
+    ),
+    
+    // STEP 18: Calculate monthly budget (from Budget_Total, not funding sources)
+    #"Added Monthly_Budget" = Table.AddColumn(#"Added Quarter", "Monthly_Budget", each 
+        if [Budget_Total] <> null then [Budget_Total] / 12 else 0, 
+        type number
+    ),
+    
+    // STEP 19: Calculate variance (Actual - Budget)
+    #"Added Variance" = Table.AddColumn(#"Added Monthly_Budget", "Variance", each 
+        [Monthly_Actual] - [Monthly_Budget], 
+        type number
+    ),
+    
+    // STEP 20: Calculate Total Funding Source Actuals for this month
+    #"Added Total_Funding_Actual" = Table.AddColumn(#"Added Variance", "Total_Funding_Actual", each 
+        List.Sum({
+            [Actual_PCOG],
+            [Actual_Kingdom_Charitable],
+            [Actual_COMCAST],
+            [Actual_Mandalblatt],
+            [Actual_Bachelor_Grant],
+            [Actual_City_Hollywood],
+            [Actual_CSC],
+            [Actual_Broward_County]
+        })
+    ),
+    
+    // STEP 21: Final column selection and ordering
+    #"Reordered Columns" = Table.SelectColumns(#"Added Total_Funding_Actual",{
+        "Account_Number",
+        "Account_Description",
+        "Category",
+        "Subcategory",
+        "Fiscal_Year",
+        "Quarter",
+        "Month",
+        "Month_Name",
+        // Budget columns
+        "Budget_Total",
+        "Total_Funding_Budget",
+        "Budget_Variance",
+        "Budget_Kingdom_Charitable",
+        "Budget_COMCAST",
+        "Budget_Sts_MMM",
+        "Budget_City_Hollywood",
+        "Budget_Broward_County",
+        "Monthly_Budget",
+        // Actual columns
+        "Monthly_Actual",
+        "Total_Funding_Actual",
+        "Actual_PCOG",
+        "Actual_Kingdom_Charitable",
+        "Actual_COMCAST",
+        "Actual_Mandalblatt",
+        "Actual_Bachelor_Grant",
+        "Actual_City_Hollywood",
+        "Actual_CSC",
+        "Actual_Broward_County",
+        "Variance",
+        "YTD_Actuals",
+        "Budget_Remaining",
+        "Budget_Notes",
+        "Actual_Notes"
+    }),
+    
+    // STEP 22: Set proper data types
+    #"Final Type Changes" = Table.TransformColumnTypes(#"Reordered Columns",{
+        {"Account_Number", type text},
+        {"Account_Description", type text},
+        {"Category", type text},
+        {"Subcategory", type text},
+        {"Fiscal_Year", type text},
+        {"Quarter", type text},
+        {"Month", type date},
+        {"Month_Name", type text},
+        {"Budget_Total", Currency.Type},
+        {"Total_Funding_Budget", Currency.Type},
+        {"Budget_Variance", Currency.Type},
+        {"Budget_Kingdom_Charitable", Currency.Type},
+        {"Budget_COMCAST", Currency.Type},
+        {"Budget_Sts_MMM", Currency.Type},
+        {"Budget_City_Hollywood", Currency.Type},
+        {"Budget_Broward_County", Currency.Type},
+        {"Monthly_Budget", Currency.Type},
+        {"Monthly_Actual", Currency.Type},
+        {"Total_Funding_Actual", Currency.Type},
+        {"Actual_PCOG", Currency.Type},
+        {"Actual_Kingdom_Charitable", Currency.Type},
+        {"Actual_COMCAST", Currency.Type},
+        {"Actual_Mandalblatt", Currency.Type},
+        {"Actual_Bachelor_Grant", Currency.Type},
+        {"Actual_City_Hollywood", Currency.Type},
+        {"Actual_CSC", Currency.Type},
+        {"Actual_Broward_County", Currency.Type},
+        {"Variance", Currency.Type},
+        {"YTD_Actuals", Currency.Type},
+        {"Budget_Remaining", Currency.Type},
+        {"Budget_Notes", type text},
+        {"Actual_Notes", type text}
+    })
+in
+    #"Final Type Changes"
+
+// === Table: File_Metadata ===
+let
+    // 1. We use the exact path WITH "%20". 
+    // Power Query requires this, otherwise it sends raw spaces and the server returns a 404 error!
+    ApiUrl = "https://centuric.sharepoint.com/sites/CC/_api/web/GetFileByServerRelativeUrl('/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx')",
+    
+    // 2. Ping the API and request a lightweight JSON response
+    RawData = Web.Contents(
+    "https://centuric.sharepoint.com/sites/CC/_api/web",
+    [
+        RelativePath = "GetFileByServerRelativeUrl('/sites/CC/Documents/Pre-Apprenticeship/Pre-Apprenticeship%20-%20Annual%20Program%20Important%20Docs/FY%202025-26%20PreApp%20Programs/JASF%20Pre-apprenticeship%20Program%20FY25-26%20DASHBOARD.xlsx')",
+        Headers = [Accept = "application/json"]
+    ]
+),
+    
+    // 3. Parse the JSON
+    JsonData = Json.Document(RawData),
+    
+    // 4. Extract the "TimeLastModified" property
+    ModifiedString = JsonData[TimeLastModified],
+    
+    // 5. Convert it from text into a proper Date/Time value (This defaults to UTC time)
+    UtcDate = DateTime.From(DateTimeZone.FromText(ModifiedString)),
+    
+    // 6. Adjust for Timezone. 
+    // We subtract 4 hours for Eastern Daylight Time. (Change the 4 to a 5 for EST, or adjust based on your local timezone)
+    // LocalDate = UtcDate - #duration(0, 4, 0, 0),
+    
+    // 7. Turn it into a 1-row table for your Power BI report
+    ResultTable = #table(type table[#"Last Updated" = datetime], {{UtcDate}})
+in
+    ResultTable
+
